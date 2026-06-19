@@ -1,4 +1,4 @@
-import { List, Printer, Users, Timer, Target } from 'lucide-react';
+import { Printer, Timer, Target } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function StartLists() {
@@ -8,38 +8,11 @@ export default function StartLists() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/entries/?status=APPROVED`)
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/entries/start-lists`)
       .then(res => res.json())
       .then(data => {
-        // Group entries by event
-        const grouped: Record<string, any[]> = {};
-        data.forEach((entry: any) => {
-          if (!grouped[entry.event_name]) grouped[entry.event_name] = [];
-          grouped[entry.event_name].push(entry);
-        });
-
-        const tracks: any[] = [];
-        const fields: any[] = [];
-
-        Object.keys(grouped).forEach(eventName => {
-          const isField = eventName.includes("JUMP") || eventName.includes("THROW") || eventName.includes("PUT");
-          if (isField) {
-             fields.push({
-               name: `${eventName} - FINAL`,
-               time: "TBA",
-               athletes: grouped[eventName].map((e, i) => ({ order: i + 1, name: e.athlete_name, island: e.island }))
-             });
-          } else {
-             tracks.push({
-               name: `${eventName} - HEAT 1`,
-               time: "TBA",
-               athletes: grouped[eventName].map((e, i) => ({ lane: i + 1, name: e.athlete_name, island: e.island }))
-             });
-          }
-        });
-
-        setSprintHeats(tracks);
-        setFieldOrders(fields);
+        setSprintHeats(data.tracks || []);
+        setFieldOrders(data.fields || []);
         setLoading(false);
       })
       .catch(err => {

@@ -1,36 +1,153 @@
-import { Map, Users, Trophy, Shield, Medal } from 'lucide-react';
+import { Map, Users, Trophy, Shield, Medal, Plus, Trash2, Edit3, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-export default function Islands() {
-  const [islands, setIslands] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+interface Island {
+  id: number;
+  name: string;
+  manager: string;
+  coach: string;
+  gold: number;
+  silver: number;
+  bronze: number;
+  color: string;
+  athletes?: number;
+}
 
-  useEffect(() => {
+export default function Islands() {
+  const [islands, setIslands] = useState<Island[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedIsland, setSelectedIsland] = useState<Island | null>(null);
+  const [toast, setToast] = useState("");
+  const [newIsland, setNewIsland] = useState({
+    name: '',
+    manager: '',
+    coach: '',
+    gold: 0,
+    silver: 0,
+    bronze: 0,
+    color: 'bg-track-dark'
+  });
+
+  const fetchIslands = () => {
     fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/islands/`)
       .then(res => res.json())
       .then(data => {
         setIslands(data);
-        setLoading(false);
       })
       .catch(err => {
         console.error(err);
-        setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchIslands();
   }, []);
-  // Removed hardcoded data
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const url = selectedIsland
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/islands/${selectedIsland.id}`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/islands/`;
+      
+      const method = selectedIsland ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newIsland)
+      });
+      
+      if (response.ok) {
+        setIsModalOpen(false);
+        setSelectedIsland(null);
+        setNewIsland({ name: '', manager: '', coach: '', gold: 0, silver: 0, bronze: 0, color: 'bg-track-dark' });
+        fetchIslands();
+        setToast(selectedIsland ? "ISLAND TEAM UPDATED" : "ISLAND TEAM REGISTERED");
+      } else {
+        setToast("ERROR: OPERATION FAILED");
+      }
+    } catch (err) {
+      console.error(err);
+      setToast("ERROR: UNABLE TO CONNECT TO SERVER");
+    }
+  };
+
+  const startAdd = () => {
+    setSelectedIsland(null);
+    setNewIsland({ name: '', manager: '', coach: '', gold: 0, silver: 0, bronze: 0, color: 'bg-track-dark' });
+    setIsModalOpen(true);
+  };
+
+  const startEdit = (island: Island) => {
+    setSelectedIsland(island);
+    setNewIsland({
+      name: island.name,
+      manager: island.manager,
+      coach: island.coach,
+      gold: island.gold,
+      silver: island.silver,
+      bronze: island.bronze,
+      color: island.color
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Are you sure you want to delete this island team?")) {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/islands/${id}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          fetchIslands();
+          setToast("ISLAND TEAM DELETED");
+        } else {
+          setToast("ERROR: FAILED TO DELETE");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const LAK_ISLANDS = [
+    "KAVARATTI",
+    "AGATTI",
+    "AMINI",
+    "ANDROTH",
+    "KALPENI",
+    "KADMAT",
+    "KILTAN",
+    "CHETLAT",
+    "BITRA",
+    "MINICOY"
+  ];
 
   return (
     <div className="pb-10 pt-4 px-2 md:px-0">
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
         <div>
           <h1 className="text-6xl md:text-8xl editorial-heading-bebas text-track-dark leading-none">ISLAND TEAMS</h1>
           <p className="text-xl font-black text-track-dark/60 uppercase tracking-widest border-l-4 border-track-coral pl-3 mt-2">Lakshadweep Sports Meet Administration</p>
         </div>
-        <div className="flex items-center gap-4 bg-white border-4 border-track-dark p-2 shadow-[4px_4px_0px_#010F1A]">
-           <div className="flex items-center gap-2 px-3">
-             <span className="w-3 h-3 bg-track-coral rounded-full animate-pulse"></span>
-             <span className="font-black uppercase tracking-widest text-sm text-track-coral">LIVE STANDINGS</span>
-           </div>
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto shrink-0">
+          {toast && <div className="px-6 py-3 bg-track-foam border-4 border-track-dark font-black text-track-dark animate-pulse transform -skew-x-6">{toast}</div>}
+          <button 
+            onClick={startAdd}
+            className="bg-track-coral text-white font-black text-lg uppercase px-6 py-3 border-4 border-track-dark shadow-[4px_4px_0px_#010F1A] hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all flex items-center justify-center gap-2"
+          >
+            <Plus className="w-5 h-5 stroke-[3]" />
+            REGISTER TEAM
+          </button>
         </div>
       </div>
 
@@ -57,8 +174,14 @@ export default function Islands() {
                   </tr>
                 </thead>
                 <tbody>
-                  {islands.map((island, i) => (
-                    <tr key={i} className={`border-b-4 border-track-dark/10 hover:bg-track-foam transition-colors ${i < 3 ? 'bg-track-foam/30' : 'bg-white'}`}>
+                  {islands.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center font-black text-track-dark/40 uppercase tracking-widest">
+                        NO TEAMS REGISTERED.
+                      </td>
+                    </tr>
+                  ) : islands.map((island, i) => (
+                    <tr key={island.id} className={`border-b-4 border-track-dark/10 hover:bg-track-foam transition-colors ${i < 3 ? 'bg-track-foam/30' : 'bg-white'}`}>
                       <td className="p-4 border-r-4 border-track-dark/10 font-black text-xl text-track-dark">{i + 1}</td>
                       <td className="p-4 border-r-4 border-track-dark/10 text-left font-black text-track-dark text-lg uppercase flex items-center gap-2">
                         {i === 0 && <Medal className="w-5 h-5 text-[#FFD700]" />}
@@ -82,12 +205,12 @@ export default function Islands() {
         <div className="space-y-6">
           <div className="p-4 border-b-8 border-track-dark bg-track-coral flex justify-between items-center transform -skew-x-2 shadow-[4px_4px_0px_#010F1A] mb-4">
             <h3 className="font-black text-2xl editorial-heading-bebas text-white">ISLAND ROSTERS</h3>
-            <span className="bg-track-dark text-white px-2 py-1 font-black uppercase text-xs">10 ISLANDS</span>
+            <span className="bg-track-dark text-white px-2 py-1 font-black uppercase text-xs">{islands.length} TEAMS</span>
           </div>
 
           <div className="grid grid-cols-1 gap-4 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
-            {islands.map((island, i) => (
-              <div key={i} className="brutal-card p-0 overflow-hidden bg-white flex group cursor-pointer hover:-translate-y-1 transition-transform">
+            {islands.map((island) => (
+              <div key={island.id} className="brutal-card p-0 overflow-hidden bg-white flex group relative">
                 <div className={`w-4 shrink-0 ${island.color || 'bg-track-dark/20'} border-r-4 border-track-dark`}></div>
                 <div className="p-4 flex-1">
                   <div className="flex justify-between items-start mb-3 border-b-2 border-track-dark pb-2">
@@ -95,11 +218,11 @@ export default function Islands() {
                       <Map className="w-5 h-5 text-track-dark/60" /> {island.name}
                     </h4>
                     <span className="bg-track-foam px-2 py-1 border-2 border-track-dark font-black text-xs uppercase flex items-center gap-1">
-                      <Users className="w-3 h-3" /> {island.athletes}
+                      <Users className="w-3 h-3" /> {island.athletes ?? 0}
                     </span>
                   </div>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-2 mb-2">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-track-coral" />
                       <span className="text-[10px] font-black text-track-dark/50 uppercase w-16 tracking-widest">MANAGER</span>
@@ -111,12 +234,108 @@ export default function Islands() {
                       <span className="text-sm font-bold text-track-dark uppercase">{island.coach}</span>
                     </div>
                   </div>
+
+                  {/* Actions area inside card */}
+                  <div className="flex justify-end gap-2 border-t border-track-dark/10 pt-3 mt-3">
+                    <button 
+                      onClick={() => startEdit(island)}
+                      className="p-1.5 text-track-dark/60 hover:text-track-lagoon transition-colors hover:bg-track-foam border border-transparent hover:border-track-dark"
+                      title="Edit Team Details"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(island.id)}
+                      className="p-1.5 text-track-dark/60 hover:text-track-coral transition-colors hover:bg-track-foam border border-transparent hover:border-track-dark"
+                      title="Delete Team"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      {/* Register/Edit Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-track-dark/80 backdrop-blur-sm">
+          <div className="bg-white border-8 border-track-dark shadow-[12px_12px_0px_#FF7A45] w-full max-w-2xl">
+            <div className="p-6 border-b-8 border-track-dark bg-track-foam flex justify-between items-center">
+              <h2 className="text-4xl editorial-heading-bebas text-track-dark">
+                {selectedIsland ? 'EDIT ISLAND TEAM' : 'REGISTER ISLAND TEAM'}
+              </h2>
+              <button onClick={() => setIsModalOpen(false)} className="font-black text-track-dark text-xl hover:text-track-coral">
+                <X className="w-8 h-8" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSave} className="p-8 space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="col-span-2">
+                  <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Island / Team Name</label>
+                  {selectedIsland ? (
+                    <input disabled value={newIsland.name} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase opacity-60 cursor-not-allowed" />
+                  ) : (
+                    <select required value={newIsland.name} onChange={e => setNewIsland({...newIsland, name: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase cursor-pointer appearance-none">
+                      <option value="">SELECT ISLAND...</option>
+                      {LAK_ISLANDS.map(name => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Team Manager</label>
+                  <input required value={newIsland.manager} onChange={e => setNewIsland({...newIsland, manager: e.target.value.toUpperCase()})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="MANAGER NAME" />
+                </div>
+                <div>
+                  <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Head Coach</label>
+                  <input required value={newIsland.coach} onChange={e => setNewIsland({...newIsland, coach: e.target.value.toUpperCase()})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="COACH NAME" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-track-dark mb-2">Gold Medals</label>
+                  <input type="number" min="0" required value={newIsland.gold} onChange={e => setNewIsland({...newIsland, gold: parseInt(e.target.value) || 0})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" />
+                </div>
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-track-dark mb-2">Silver Medals</label>
+                  <input type="number" min="0" required value={newIsland.silver} onChange={e => setNewIsland({...newIsland, silver: parseInt(e.target.value) || 0})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" />
+                </div>
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-track-dark mb-2">Bronze Medals</label>
+                  <input type="number" min="0" required value={newIsland.bronze} onChange={e => setNewIsland({...newIsland, bronze: parseInt(e.target.value) || 0})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="col-span-2">
+                  <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Theme Color</label>
+                  <select value={newIsland.color} onChange={e => setNewIsland({...newIsland, color: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase appearance-none cursor-pointer">
+                    <option value="bg-track-dark">DARK</option>
+                    <option value="bg-track-coral">CORAL (ORANGE)</option>
+                    <option value="bg-track-lagoon">LAGOON (TEAL)</option>
+                    <option value="bg-track-foam">FOAM (LIGHT)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 mt-6 border-t-4 border-track-dark">
+                <button type="submit" className="bg-track-lagoon text-track-dark font-black text-lg uppercase px-8 py-3 border-4 border-track-dark shadow-[4px_4px_0px_#010F1A] hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all">
+                  {selectedIsland ? 'SAVE CHANGES' : 'REGISTER TEAM'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

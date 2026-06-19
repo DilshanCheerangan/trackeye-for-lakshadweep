@@ -1,4 +1,4 @@
-import { Calendar, MapPin, Trophy, Users, ArrowRight, Plus, Trash2, Play, CheckCircle, Trash } from 'lucide-react';
+import { Calendar, MapPin, Trophy, Users, ArrowRight, Play, CheckCircle, Trash } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -104,6 +104,16 @@ export default function Competitions() {
       console.error(err);
     }
   };
+
+  const handleEnterMeet = (id: number, name: string) => {
+    sessionStorage.setItem('enteredCompetitionId', id.toString());
+    sessionStorage.setItem('enteredCompetitionName', name);
+    setToast(`ENTERED MEET: ${name}`);
+    setTimeout(() => {
+      navigate('/dashboard/track-events');
+    }, 1000);
+  };
+
   return (
     <div className="pb-10 pt-4 px-2 md:px-0">
       {/* Header */}
@@ -134,7 +144,7 @@ export default function Competitions() {
               <h2 className="text-2xl font-black text-track-dark/40 uppercase tracking-widest">NO COMPETITIONS FOUND.</h2>
             </div>
           ) : displayCompetitions.map((comp, i) => (
-            <div key={i} className="brutal-card p-0 flex flex-col md:flex-row overflow-hidden group hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all cursor-pointer">
+            <div key={i} onClick={() => handleEnterMeet(comp.id, comp.name)} className="brutal-card p-0 flex flex-col md:flex-row overflow-hidden group hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all cursor-pointer">
               {/* Left Color Bar */}
               <div className={`w-full md:w-6 ${comp.color} shrink-0`}></div>
               
@@ -193,7 +203,7 @@ export default function Competitions() {
                 >
                   <Trash className="w-5 h-5" />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); navigate('/live'); }} className="w-12 h-12 bg-white border-4 border-track-dark flex items-center justify-center transform -skew-x-6 hover:bg-track-lagoon transition-colors">
+                <button onClick={(e) => { e.stopPropagation(); handleEnterMeet(comp.id, comp.name); }} className="w-12 h-12 bg-white border-4 border-track-dark flex items-center justify-center transform -skew-x-6 hover:bg-track-lagoon transition-colors">
                   <ArrowRight className="w-6 h-6 stroke-[3]" />
                 </button>
               </div>

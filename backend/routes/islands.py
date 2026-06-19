@@ -24,3 +24,26 @@ def create_island(island: schemas.IslandCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_island)
     return db_island
+
+@router.put("/{id}", response_model=schemas.IslandResponse)
+def update_island(id: int, island: schemas.IslandUpdate, db: Session = Depends(get_db)):
+    db_island = db.query(models.Island).filter(models.Island.id == id).first()
+    if not db_island:
+        raise HTTPException(status_code=404, detail="Island not found")
+    
+    for key, value in island.model_dump(exclude_unset=True).items():
+        setattr(db_island, key, value)
+        
+    db.commit()
+    db.refresh(db_island)
+    return db_island
+
+@router.delete("/{id}")
+def delete_island(id: int, db: Session = Depends(get_db)):
+    db_island = db.query(models.Island).filter(models.Island.id == id).first()
+    if not db_island:
+        raise HTTPException(status_code=404, detail="Island not found")
+        
+    db.delete(db_island)
+    db.commit()
+    return {"message": "Island deleted successfully"}

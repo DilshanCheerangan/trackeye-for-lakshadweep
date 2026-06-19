@@ -72,6 +72,14 @@ class IslandResponse(IslandBase):
     class Config:
         from_attributes = True
 
+class IslandUpdate(BaseModel):
+    manager: Optional[str] = None
+    coach: Optional[str] = None
+    gold: Optional[int] = None
+    silver: Optional[int] = None
+    bronze: Optional[int] = None
+    color: Optional[str] = None
+
 class TrackEventBase(BaseModel):
     competition_id: int
     name: str

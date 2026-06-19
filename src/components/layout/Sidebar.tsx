@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -32,6 +32,9 @@ const navItems = [
 ];
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+  const activeMeetName = sessionStorage.getItem('enteredCompetitionName');
+
   return (
     <aside className="w-64 bg-track-foam border-r-8 border-track-dark hidden md:flex flex-col h-screen sticky top-0 shadow-[8px_0px_0px_rgba(0,0,0,0.05)] z-20">
       <div className="p-6 border-b-8 border-track-dark bg-track-coral transform">
@@ -44,6 +47,28 @@ export default function Sidebar() {
           </span>
         </NavLink>
       </div>
+
+      {activeMeetName && (
+        <div className="mx-4 mt-4 p-3 bg-track-coral text-white border-4 border-track-dark shadow-[4px_4px_0px_#010F1A] font-black uppercase text-xs flex flex-col gap-2 relative">
+          <div className="flex justify-between items-start gap-2">
+            <div className="flex-1">
+              <div className="text-[10px] text-track-dark tracking-widest font-black">ACTIVE MEET</div>
+              <div className="mt-1 font-editorial-bebas text-xl leading-none text-track-dark tracking-wide uppercase">{activeMeetName}</div>
+            </div>
+            <button 
+              onClick={() => {
+                sessionStorage.removeItem('enteredCompetitionId');
+                sessionStorage.removeItem('enteredCompetitionName');
+                navigate('/dashboard/competitions');
+              }}
+              className="w-5 h-5 bg-white text-track-dark border-2 border-track-dark flex items-center justify-center font-black hover:bg-track-dark hover:text-white transition-colors cursor-pointer text-xs"
+              title="Exit active meet"
+            >
+              X
+            </button>
+          </div>
+        </div>
+      )}
       
       <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-3">
         {navItems.map((item) => (

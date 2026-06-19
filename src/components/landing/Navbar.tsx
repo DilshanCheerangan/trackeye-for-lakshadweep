@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Activity } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 const navLinks = [
   { label: 'FEATURES', href: '#features' },
@@ -17,8 +17,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 bg-track-coral border-4 border-track-dark flex items-center justify-center transform -skew-x-6 group-hover:bg-track-dark transition-all">
-            <Activity className="w-5 h-5 text-white stroke-[3] group-hover:text-track-coral transition-colors" />
+          <div className="w-10 h-10 bg-white border-4 border-track-dark flex items-center justify-center overflow-hidden transform -skew-x-6 group-hover:border-track-coral transition-all">
+            <img src="/lak_athletics_logo.png" alt="LAK Athletics Logo" className="w-full h-full object-contain p-0.5" />
           </div>
           <span className="text-3xl editorial-heading-bebas text-track-dark tracking-wider group-hover:text-track-coral transition-colors">
             TRACKEYE
@@ -40,12 +40,6 @@ export default function Navbar() {
 
         {/* CTA */}
         <div className="hidden md:flex items-center gap-4">
-          <Link
-            to="/dashboard?demo=true"
-            className="bg-white text-track-dark font-black text-sm uppercase px-5 py-2.5 border-4 border-track-dark hover:bg-track-foam transition-all"
-          >
-            TRY DEMO
-          </Link>
           <Link
             to="/dashboard?demo=false"
             className="bg-track-dark text-white font-black text-sm uppercase px-5 py-2.5 border-4 border-track-dark hover:bg-track-coral hover:border-track-coral transition-all shadow-[4px_4px_0px_#FF7A45] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
@@ -77,13 +71,6 @@ export default function Navbar() {
               {link.label}
             </a>
           ))}
-          <Link
-            to="/dashboard?demo=true"
-            className="bg-white text-track-dark font-black text-sm uppercase px-5 py-3 text-center border-4 border-track-dark"
-            onClick={() => setOpen(false)}
-          >
-            TRY DEMO
-          </Link>
           <Link
             to="/dashboard?demo=false"
             className="bg-track-dark text-white font-black text-sm uppercase px-5 py-3 text-center border-4 border-track-dark"

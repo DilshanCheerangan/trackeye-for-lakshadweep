@@ -53,7 +53,7 @@ export default function IslandSection() {
               <ArrowRight className="w-5 h-5 stroke-[3] group-hover:translate-x-1 transition-transform" />
             </Link>
             <a
-              href="https://lakathletics.com"
+              href="http://www.lakathletics.com/index.htm"
               target="_blank"
               rel="noopener noreferrer"
               className="brutal-button bg-transparent text-track-lagoon border-4 border-track-lagoon px-8 py-4 text-base uppercase tracking-widest font-black hover:bg-track-lagoon hover:text-track-dark transition-all"

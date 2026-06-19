@@ -1,41 +1,41 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, Play } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const ATHLETE_IMAGE = '/ChatGPT Image Jun 18, 2026, 06_14_47 AM.png';
+const ATHLETE_IMAGE = '/athletes_collage.jpg';
 
 export default function HeroSection() {
   return (
     <div className="relative min-h-screen bg-track-foam overflow-hidden pt-16 flex items-center">
 
       {/* ══════════════════════════════════════════════
-          FULL-WIDTH ATHLETE IMAGE — spans entire hero
+          ATHLETE COLLAGE SHOWCASE — positioned on the right
       ══════════════════════════════════════════════ */}
       <div className="absolute inset-0 z-0">
-        {/* Orange accent block behind athlete's torso */}
+        {/* Right color block */}
         <div
-          className="absolute bg-track-coral z-[1]"
-          style={{ top: '5%', right: '5%', width: '200px', bottom: '8%' }}
+          className="absolute bg-track-lagoon/10 z-[1] border-l-8 border-track-dark hidden lg:block"
+          style={{ top: '0', right: '0', width: '45%', bottom: '0' }}
         />
 
-        {/* Athlete image — full bleed across entire hero */}
+        {/* Floating background design card */}
+        <div
+          className="absolute bg-track-coral z-[1] transform rotate-3 border-4 border-track-dark shadow-[4px_4px_0px_#010F1A] hidden lg:block"
+          style={{ top: '25%', right: '12%', width: '300px', height: '350px' }}
+        />
+
+        {/* Athlete collage image */}
         <motion.img
           src={ATHLETE_IMAGE}
-          alt="Sprinter at peak speed — TrackEye AI Athletics"
-          className="absolute inset-0 w-full h-full object-cover z-[2]"
-          style={{ objectPosition: '70% top' }}
-          initial={{ opacity: 0, scale: 1.04 }}
+          alt="Lakshadweep Athlete Champions — TrackEye AI Athletics"
+          className="absolute right-0 bottom-0 top-24 w-full lg:w-[45%] object-contain z-[2] p-8 md:p-12"
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.15, duration: 0.7, ease: 'easeOut' }}
         />
 
-        {/* LEFT fade — white gradient so text is readable over the image */}
-        <div className="absolute inset-y-0 left-0 w-[55%] z-[3]
-          bg-gradient-to-r from-track-foam via-track-foam/95 to-transparent" />
-
-        {/* TOP subtle vignette */}
-        <div className="absolute inset-x-0 top-0 h-32 z-[3]
-          bg-gradient-to-b from-track-foam/60 to-transparent" />
+        {/* LEFT background color for text readability on small/mobile screens */}
+        <div className="absolute inset-y-0 left-0 w-full lg:w-[55%] z-[0] bg-track-foam" />
       </div>
 
       {/* ══════════════════════════════════════════════
@@ -49,10 +49,11 @@ export default function HeroSection() {
           className="will-change-transform w-full lg:w-[52%]"
         >
           {/* Eyebrow */}
-          <div className="inline-flex items-center gap-3 mb-5">
-            <div className="w-8 h-[3px] bg-track-coral" />
-            <span className="text-xs font-black text-track-dark/60 uppercase tracking-[0.3em]">
-              Next-Gen Sports Technology
+          <div className="inline-flex items-center gap-3 mb-5 bg-white border-2 border-track-dark px-3 py-1.5 shadow-[2px_2px_0px_#010F1A] transform -skew-x-3">
+            <img src="/lak_athletics_logo.png" alt="LAK Logo" className="w-6 h-6 object-contain" />
+            <div className="w-[2px] h-4 bg-track-dark/20" />
+            <span className="text-[10px] sm:text-xs font-black text-track-dark uppercase tracking-[0.2em] sm:tracking-[0.3em]">
+              LAKSHADWEEP ATHLETICS ASSOCIATION
             </span>
           </div>
 
@@ -79,13 +80,6 @@ export default function HeroSection() {
             >
               LAUNCH PLATFORM
               <ArrowRight className="w-4 h-4 stroke-[3] group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link
-              to="/dashboard?demo=true"
-              className="brutal-button bg-white text-track-dark px-6 py-3 text-sm uppercase tracking-widest font-black flex items-center gap-3 shadow-[5px_5px_0px_#010F1A] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all border-4 border-track-dark"
-            >
-              <Play className="w-4 h-4 fill-track-dark stroke-[2.5]" />
-              TRY DEMO
             </Link>
           </div>
         </motion.div>

@@ -2,16 +2,16 @@ import { CheckCircle, XCircle, AlertTriangle, UserCheck, Check, X, Filter } from
 import { useState, useEffect } from 'react';
 
 interface Entry {
-  id: string;
+  id: number;
+  entry_id: string;
   athlete_name: string;
   island: string;
   event: string;
+  event_name?: string;
   age_group: string;
-  checks: {
-    age: 'PASS' | 'FAIL';
-    duplicates: 'PASS' | 'FAIL';
-    clash: 'PASS' | 'WARN';
-  };
+  age_check: 'PASS' | 'FAIL';
+  dup_check: 'PASS' | 'FAIL';
+  clash_check: 'PASS' | 'WARN';
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 

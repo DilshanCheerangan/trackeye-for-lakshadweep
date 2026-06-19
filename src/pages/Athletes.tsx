@@ -1,4 +1,4 @@
-import { Search, Plus, Filter, MapPin, Award, Trash2, X, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
+import { Search, Filter, MapPin, Award, Trash2, X, TrendingUp, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface Athlete {
@@ -14,18 +14,9 @@ interface Athlete {
 export default function Athletes() {
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAthlete, setSelectedAthlete] = useState<Athlete | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState("");
-  const [newAthlete, setNewAthlete] = useState({
-    athlete_id: '',
-    name: '',
-    event: '',
-    island: '',
-    pb: '',
-    status: 'ACTIVE'
-  });
 
   useEffect(() => {
     if (toast) {
@@ -50,26 +41,6 @@ export default function Athletes() {
   useEffect(() => {
     fetchAthletes();
   }, []);
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/athletes/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newAthlete)
-      });
-      if (response.ok) {
-        setIsModalOpen(false);
-        setNewAthlete({ athlete_id: '', name: '', event: '', island: '', pb: '', status: 'ACTIVE' });
-        fetchAthletes(); // Refresh list
-      } else {
-        setToast("ERROR: FAILED TO REGISTER (CHECK ID)");
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this athlete?")) {
@@ -120,13 +91,6 @@ export default function Athletes() {
             Manage competitors, performance records, and statuses.
           </p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-track-coral text-white font-black text-lg uppercase px-6 py-3 border-4 border-track-dark shadow-[4px_4px_0px_#010F1A] hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all flex items-center gap-2"
-        >
-          <Plus className="w-5 h-5 stroke-[3]" />
-          REGISTER ATHLETE
-        </button>
       </div>
 
       {/* Toolbar */}
@@ -229,60 +193,7 @@ export default function Athletes() {
         </div>
       </div>
 
-      {/* Registration Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-track-dark/80 backdrop-blur-sm">
-          <div className="bg-white border-8 border-track-dark shadow-[12px_12px_0px_#FF7A45] w-full max-w-2xl">
-            <div className="p-6 border-b-8 border-track-dark bg-track-foam flex justify-between items-center">
-              <h2 className="text-4xl editorial-heading-bebas text-track-dark">REGISTER NEW ATHLETE</h2>
-              <button onClick={() => setIsModalOpen(false)} className="font-black text-track-dark text-xl hover:text-track-coral"><X className="w-8 h-8" /></button>
-            </div>
-            <form onSubmit={handleRegister} className="p-8 space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Athlete ID</label>
-                  <input required value={newAthlete.athlete_id} onChange={e => setNewAthlete({...newAthlete, athlete_id: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="e.g. ATH-1010" />
-                </div>
-                <div>
-                  <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Full Name</label>
-                  <input required value={newAthlete.name} onChange={e => setNewAthlete({...newAthlete, name: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="JOHN DOE" />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Primary Event</label>
-                  <input required value={newAthlete.event} onChange={e => setNewAthlete({...newAthlete, event: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="100M SPRINT" />
-                </div>
-                <div>
-                  <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Island / Region</label>
-                  <input required value={newAthlete.island} onChange={e => setNewAthlete({...newAthlete, island: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="KAVARATTI" />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Personal Best</label>
-                  <input required value={newAthlete.pb} onChange={e => setNewAthlete({...newAthlete, pb: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="10.5s" />
-                </div>
-                <div>
-                  <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Status</label>
-                  <select value={newAthlete.status} onChange={e => setNewAthlete({...newAthlete, status: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase appearance-none">
-                    <option value="ACTIVE">ACTIVE</option>
-                    <option value="RESTING">RESTING</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4 mt-6 border-t-4 border-track-dark">
-                <button type="submit" className="bg-track-lagoon text-track-dark font-black text-lg uppercase px-8 py-3 border-4 border-track-dark shadow-[4px_4px_0px_#010F1A] hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all">
-                  SUBMIT REGISTRATION
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Athlete Profile Modal */}
       {selectedAthlete && (

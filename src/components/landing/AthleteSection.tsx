@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Award, MapPin, ExternalLink, Trophy, Calendar, Globe } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 /**
  * Real athletes from Lakshadweep, India.
@@ -110,113 +110,60 @@ export default function AthleteSection() {
           </div>
         </div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {athletes.map((athlete, i) => (
+        {/* Athlete Showcase */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch">
+          
+          {/* Athlete Profiles list */}
+          <div className="lg:col-span-7 flex flex-col">
             <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.15, duration: 0.4, ease: "easeOut" }}
-              className="group will-change-transform flex flex-col"
+              transition={{ duration: 0.5 }}
+              className="bg-white border-8 border-white shadow-[12px_12px_0px_#FF7A45] p-8 h-full flex flex-col justify-between"
             >
-              <div className="border-8 border-white group-hover:-translate-y-4 group-hover:-translate-x-2 transition-all duration-300 shadow-[12px_12px_0px_#00C8C8] group-hover:shadow-[20px_20px_0px_#00C8C8] flex flex-col h-full">
-
-                {/* Clickable image → Wikipedia/source */}
-                <a
-                  href={athlete.wikiUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={`View profile of ${athlete.name}`}
-                  className="block h-72 overflow-hidden relative border-b-8 border-white grayscale group-hover:grayscale-0 transition-all duration-500 cursor-pointer shrink-0"
-                  aria-label={`Open Wikipedia page for ${athlete.name}`}
-                >
-                  <img
-                    src={athlete.image}
-                    alt={athlete.imageAlt}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    style={{ objectPosition: athlete.objectPosition || 'center' }}
-                    loading="lazy"
-                  />
-                  {/* Dark gradient */}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-track-dark to-transparent h-28" />
-
-                  {/* Wikipedia hover badge */}
-                  <div className="absolute top-4 right-4 bg-white border-4 border-track-dark px-2 py-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-[4px_4px_0px_#010F1A]">
-                    <ExternalLink className="w-4 h-4 text-track-dark stroke-[3]" />
-                    <span className="text-track-dark font-black text-xs uppercase">PROFILE</span>
+              <div className="flex flex-col gap-6">
+                {athletes.map((athlete, idx) => (
+                  <div key={idx} className="border-l-4 border-track-lagoon pl-4 py-1">
+                    <h4 className="text-xl font-black text-track-dark leading-none uppercase mb-1 flex items-center gap-2">
+                      <span>{athlete.name}</span>
+                      <span className="text-xs bg-track-coral text-white px-2 py-0.5 rounded-none font-bold">
+                        {athlete.pb !== "—" ? athlete.pb : "CHAMPION"}
+                      </span>
+                    </h4>
+                    <p className="text-xs text-track-dark/50 font-black uppercase tracking-wider mb-2">
+                      {athlete.island} · {athlete.event}
+                    </p>
+                    <p className="text-xs text-track-dark/70 font-bold leading-normal italic">
+                      "{athlete.bio}"
+                    </p>
                   </div>
-
-                  {/* Island tag */}
-                  <div className="absolute bottom-4 left-4 flex items-center gap-1 bg-track-lagoon text-track-dark font-black px-3 py-1 text-xs uppercase border-2 border-track-dark transform -skew-x-12">
-                    <MapPin className="w-3 h-3 shrink-0" />
-                    {athlete.island}
-                  </div>
-
-                  {/* Event tag */}
-                  <div className={`absolute bottom-4 right-4 font-black px-3 py-1 text-xs uppercase border-2 border-track-dark ${athlete.color} ${i === 2 ? 'text-track-dark' : 'text-white'}`}>
-                    {athlete.event.split(' · ')[0]}
-                  </div>
-                </a>
-
-                {/* Info body */}
-                <div className="p-6 bg-white flex flex-col flex-1 relative">
-                  {/* Award badge */}
-                  <div className="absolute -top-6 right-6 w-12 h-12 bg-track-coral border-4 border-track-dark flex items-center justify-center shadow-[4px_4px_0px_#010F1A] group-hover:rotate-12 transition-transform z-10">
-                    <Award className="w-6 h-6 text-white stroke-[2.5]" />
-                  </div>
-
-                  {/* Name + event */}
-                  <h3 className="text-2xl editorial-heading-bebas text-track-dark leading-none mb-1">{athlete.name}</h3>
-                  <p className="text-track-coral font-black text-xs tracking-widest uppercase mb-1">{athlete.event}</p>
-
-                  {/* Born + Coach */}
-                  <div className="flex flex-wrap gap-4 text-xs font-black text-track-dark/50 uppercase tracking-widest mb-4">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" /> {athlete.born}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Trophy className="w-3 h-3" /> {athlete.coach}
-                    </span>
-                  </div>
-
-                  {/* Bio */}
-                  <p className="text-track-dark/70 font-bold text-sm leading-relaxed mb-4 italic">
-                    "{athlete.bio}"
-                  </p>
-
-                  {/* Medals list */}
-                  <div className="bg-track-dark p-4 mb-5 border-l-4 border-track-lagoon flex flex-col gap-2 flex-1">
-                    <p className="text-track-lagoon font-black text-xs uppercase tracking-widest mb-1">KEY ACHIEVEMENTS</p>
-                    {athlete.medals.map((medal, m) => (
-                      <p key={m} className="text-white text-xs font-bold leading-snug">{medal}</p>
-                    ))}
-                  </div>
-
-                  {/* PB stat */}
-                  <div className="flex border-4 border-track-dark divide-x-4 divide-track-dark">
-                    <div className="p-3 flex-1 bg-track-foam">
-                      <p className="text-[10px] font-black text-track-dark/50 uppercase tracking-widest mb-1">PERSONAL BEST</p>
-                      <p className="text-2xl font-black text-track-dark">{athlete.pb}</p>
-                      <p className="text-[9px] font-bold text-track-dark/40 uppercase mt-0.5">{athlete.pbNote}</p>
-                    </div>
-                    <div className="p-3 flex-1 bg-track-foam flex flex-col justify-end">
-                      <a
-                        href={athlete.wikiUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-black uppercase text-track-coral hover:text-track-dark transition-colors border-b-2 border-track-coral pb-0.5"
-                      >
-                        Full Profile
-                        <ExternalLink className="w-3 h-3 shrink-0" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
             </motion.div>
-          ))}
+          </div>
+
+          {/* Unified Talent Pool card */}
+          <div className="lg:col-span-5 flex flex-col gap-8 justify-between">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-track-lagoon border-8 border-track-dark p-8 shadow-[12px_12px_0px_white] h-full flex flex-col justify-center"
+            >
+              <h4 className="text-3xl font-black text-track-dark uppercase mb-4 tracking-tight border-b-4 border-track-dark pb-2">
+                Unified Talent Pool
+              </h4>
+              <p className="text-base text-track-dark font-bold leading-relaxed uppercase mb-6">
+                TrackEye's digital registry tracks athletes across Kavaratti, Agatti, Androth, Minicoy, and Kadmat to create a permanent historical sports archive for the region.
+              </p>
+              <p className="text-xs text-track-dark/70 font-bold leading-relaxed uppercase">
+                By compiling season statistics, personal best history, and medal records in one database, sports authorities can accurately analyze progression patterns and nurture next-generation talent for national-level qualifiers.
+              </p>
+            </motion.div>
+          </div>
+
         </div>
 
         {/* Source credit */}

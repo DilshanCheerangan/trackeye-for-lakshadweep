@@ -1,8 +1,7 @@
-import { Camera, Maximize, AlertTriangle, Play, Smartphone, Zap, Save, Settings } from 'lucide-react';
+import { Camera, Maximize, AlertTriangle, Play, Smartphone, Zap, Save } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function LiveCapture() {
-  const [cameraStatus, setCameraStatus] = useState("ONLINE");
   const [toast, setToast] = useState("");
   const [liveSpeed, setLiveSpeed] = useState<number>(38.2);
   const [liveEvent, setLiveEvent] = useState<string>("MEN'S 100M FINAL");
