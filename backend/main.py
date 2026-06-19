@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from . import models
 from .database import engine
-from .routes import athletes, competitions, ws, video, stats
+from .routes import athletes, competitions, ws, video, stats, islands, entries, events
 
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
@@ -24,6 +24,9 @@ app.include_router(competitions.router)
 app.include_router(ws.router)
 app.include_router(video.router)
 app.include_router(stats.router)
+app.include_router(islands.router)
+app.include_router(entries.router)
+app.include_router(events.router)
 
 @app.get("/")
 def read_root():

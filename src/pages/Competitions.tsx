@@ -1,4 +1,4 @@
-import { Calendar, MapPin, Trophy, Users, ArrowRight, Play, CheckCircle, Trash } from 'lucide-react';
+import { Calendar, MapPin, Trophy, Users, ArrowRight, Plus, Trash2, Play, CheckCircle, Trash } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,6 +19,7 @@ export default function Competitions() {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toast, setToast] = useState("");
   const [newMeet, setNewMeet] = useState({
     name: '',
     date_str: '',
@@ -29,6 +30,13 @@ export default function Competitions() {
     events_completed: 0,
     color: 'bg-track-dark'
   });
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchCompetitions = () => {
     fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/competitions/`)
@@ -53,11 +61,11 @@ export default function Competitions() {
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/competitions/${id}`, {
           method: 'DELETE'
         });
-        if (response.ok) {
-          fetchCompetitions();
-        } else {
-          alert("Failed to delete competition.");
+        if (!response.ok) {
+          setToast("ERROR: FAILED TO DELETE");
+          return;
         }
+        fetchCompetitions();
       } catch (err) {
         console.error(err);
       }
@@ -82,16 +90,16 @@ export default function Competitions() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMeet)
       });
-      if (response.ok) {
-        setIsModalOpen(false);
-        setNewMeet({
-          name: '', date_str: '', location: '', status: 'UPCOMING', 
-          athletes_count: 0, events_total: 0, events_completed: 0, color: 'bg-track-dark'
-        });
-        fetchCompetitions(); // Refresh list
-      } else {
-        alert("Failed to create meet.");
+      if (!response.ok) {
+        setToast("ERROR: FAILED TO CREATE");
+        return;
       }
+      setIsModalOpen(false);
+      setNewMeet({
+        name: '', date_str: '', location: '', status: 'UPCOMING', 
+        athletes_count: 0, events_total: 0, events_completed: 0, color: 'bg-track-dark'
+      });
+      fetchCompetitions(); // Refresh list
     } catch (err) {
       console.error(err);
     }
@@ -226,6 +234,7 @@ export default function Competitions() {
             </button>
           </div>
         </div>
+        {toast && <div className="px-6 py-3 bg-track-foam border-4 border-track-dark font-black text-track-dark animate-pulse transform -skew-x-6">{toast}</div>}
       </div>
 
       {/* Creation Modal */}

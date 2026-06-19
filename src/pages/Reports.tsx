@@ -1,6 +1,15 @@
-import { FileText, Download, FileSpreadsheet, FileJson, Clock } from 'lucide-react';
+import { FileText, Download, FileSpreadsheet, FileJson, Clock, Medal, Trophy } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export default function Reports() {
+  const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
   const reports = [
     { title: "OFFICIAL RESULTS - MEN'S 100M FINAL", time: "10 MINS AGO", type: "pdf", size: "1.2 MB" },
     { title: "START LIST - WOMEN'S LONG JUMP", time: "1 HOUR AGO", type: "pdf", size: "0.8 MB" },
@@ -16,7 +25,8 @@ export default function Reports() {
           <p className="text-xl font-black text-track-dark/60 uppercase tracking-widest border-l-4 border-track-coral pl-3 mt-2">Generate and download raw data.</p>
         </div>
         <div className="flex gap-4">
-          <button onClick={() => alert("Report generation scheduled.")} className="px-6 py-4 bg-track-foam border-4 border-track-dark font-black uppercase tracking-widest text-track-dark hover:bg-track-lagoon transition-all transform -skew-x-6 hover:-translate-y-1 shadow-[4px_4px_0px_#010F1A]">
+          {toast && <div className="px-6 py-4 bg-track-foam border-4 border-track-dark font-black text-track-dark animate-pulse transform -skew-x-6">{toast}</div>}
+          <button onClick={() => setToast("REPORT GENERATION SCHEDULED")} className="px-6 py-4 bg-track-foam border-4 border-track-dark font-black uppercase tracking-widest text-track-dark hover:bg-track-lagoon transition-all transform -skew-x-6 hover:-translate-y-1 shadow-[4px_4px_0px_#010F1A]">
             Generate Report
           </button>
           <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/stats/report/csv`} download className="inline-block px-6 py-4 bg-track-dark border-4 border-track-dark font-black uppercase tracking-widest text-white hover:bg-track-coral transition-all transform -skew-x-6 hover:-translate-y-1 shadow-[4px_4px_0px_#FF7A45]">
@@ -25,34 +35,124 @@ export default function Reports() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-        <div onClick={() => alert("Downloading PDF reports...")} className="brutal-card p-8 flex flex-col items-center justify-center text-center gap-6 cursor-pointer hover:bg-track-coral hover:text-white group">
-          <div className="w-20 h-20 bg-track-dark flex items-center justify-center transform -skew-x-12 shadow-[4px_4px_0px_#010F1A] group-hover:shadow-[4px_4px_0px_white]">
-            <FileText className="w-10 h-10 text-track-coral group-hover:text-white stroke-[2.5]" />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-12">
+        {/* Instant Result Sheet Card */}
+        <div className="brutal-card p-0 flex flex-col h-full bg-white relative overflow-hidden">
+          {/* Medal watermark */}
+          <Trophy className="absolute -right-10 -bottom-10 w-64 h-64 text-track-foam opacity-50 pointer-events-none" />
+          
+          <div className="p-4 border-b-8 border-track-dark bg-track-lagoon flex justify-between items-center z-10 relative">
+            <h3 className="font-black text-3xl editorial-heading-bebas text-track-dark">INSTANT RESULT SHEET</h3>
+            <span className="bg-track-dark text-track-lagoon px-3 py-1 font-black text-sm uppercase transform -skew-x-6">AUTO-GENERATED</span>
           </div>
-          <div>
-            <h3 className="text-3xl editorial-heading-bebas text-track-dark group-hover:text-white">PDF REPORTS</h3>
-            <p className="text-sm font-black text-track-dark/60 uppercase group-hover:text-white/80">Official start lists and results</p>
+          <div className="p-6 flex-1 z-10 relative">
+            <div className="flex justify-between items-end border-b-4 border-track-dark pb-4 mb-4">
+              <div>
+                <h4 className="text-2xl font-black text-track-dark uppercase tracking-wider">MEN'S 100M FINAL</h4>
+                <div className="flex gap-4 mt-2 text-sm font-bold text-track-dark/60 uppercase">
+                  <span>DATE: TODAY</span>
+                  <span>WIND: +1.2</span>
+                  <span>VENUE: MAIN STADIUM</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setToast("GENERATING PDF...")} className="p-2 border-4 border-track-dark bg-track-coral text-white hover:bg-track-dark transition-colors shadow-[2px_2px_0px_#010F1A]" title="Export PDF">
+                  <FileText className="w-5 h-5 stroke-[3]" />
+                </button>
+                <button onClick={() => setToast("GENERATING EXCEL...")} className="p-2 border-4 border-track-dark bg-[#21A366] text-white hover:bg-track-dark transition-colors shadow-[2px_2px_0px_#010F1A]" title="Export Excel">
+                  <FileSpreadsheet className="w-5 h-5 stroke-[3]" />
+                </button>
+              </div>
+            </div>
+
+            {/* Medalists */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-track-foam border-4 border-track-dark p-3 flex flex-col items-center text-center transform -skew-x-2">
+                <div className="w-10 h-10 bg-[#FFD700] rounded-full flex items-center justify-center border-2 border-track-dark mb-2 shadow-[2px_2px_0px_#010F1A]">
+                  <Medal className="w-5 h-5 text-track-dark stroke-[3]" />
+                </div>
+                <span className="text-xs font-black text-track-dark/60 uppercase">GOLD</span>
+                <span className="font-black text-sm uppercase mt-1">M. JOHNSON</span>
+                <span className="font-black text-track-coral text-lg">9.862s</span>
+              </div>
+              <div className="bg-track-foam border-4 border-track-dark p-3 flex flex-col items-center text-center transform -skew-x-2">
+                <div className="w-10 h-10 bg-[#C0C0C0] rounded-full flex items-center justify-center border-2 border-track-dark mb-2 shadow-[2px_2px_0px_#010F1A]">
+                  <Medal className="w-5 h-5 text-track-dark stroke-[3]" />
+                </div>
+                <span className="text-xs font-black text-track-dark/60 uppercase">SILVER</span>
+                <span className="font-black text-sm uppercase mt-1">A. DE GRASSE</span>
+                <span className="font-black text-track-coral text-lg">9.868s</span>
+              </div>
+              <div className="bg-track-foam border-4 border-track-dark p-3 flex flex-col items-center text-center transform -skew-x-2">
+                <div className="w-10 h-10 bg-[#CD7F32] rounded-full flex items-center justify-center border-2 border-track-dark mb-2 shadow-[2px_2px_0px_#010F1A]">
+                  <Medal className="w-5 h-5 text-track-dark stroke-[3]" />
+                </div>
+                <span className="text-xs font-black text-track-dark/60 uppercase">BRONZE</span>
+                <span className="font-black text-sm uppercase mt-1">C. COLEMAN</span>
+                <span className="font-black text-track-coral text-lg">9.891s</span>
+              </div>
+            </div>
+
+            {/* Table */}
+            <table className="w-full text-left border-collapse bg-white border-4 border-track-dark">
+              <thead>
+                <tr className="bg-track-foam border-b-4 border-track-dark">
+                  <th className="p-2 font-black text-xs uppercase tracking-widest text-track-dark border-r-4 border-track-dark text-center">RK</th>
+                  <th className="p-2 font-black text-xs uppercase tracking-widest text-track-dark border-r-4 border-track-dark text-center">LN</th>
+                  <th className="p-2 font-black text-xs uppercase tracking-widest text-track-dark border-r-4 border-track-dark">ATHLETE</th>
+                  <th className="p-2 font-black text-xs uppercase tracking-widest text-track-dark text-right">TIME</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { rank: 1, lane: 4, name: "M. JOHNSON", time: "9.862s" },
+                  { rank: 2, lane: 5, name: "A. DE GRASSE", time: "9.868s" },
+                  { rank: 3, lane: 3, name: "C. COLEMAN", time: "9.891s" },
+                  { rank: 4, lane: 6, name: "F. OMANYALA", time: "9.924s" },
+                  { rank: 5, lane: 2, name: "A. SIMBINE", time: "9.931s" }
+                ].map((row, i) => (
+                  <tr key={i} className="border-b-2 border-track-dark/20 hover:bg-track-foam/50 transition-colors">
+                    <td className="p-2 border-r-4 border-track-dark font-black text-center bg-track-foam/30">{row.rank}</td>
+                    <td className="p-2 border-r-4 border-track-dark font-bold text-track-dark/60 text-center">{row.lane}</td>
+                    <td className="p-2 border-r-4 border-track-dark font-bold uppercase">{row.name}</td>
+                    <td className="p-2 font-black text-track-coral text-right">{row.time}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-        
-        <div className="brutal-card p-8 flex flex-col items-center justify-center text-center gap-6 cursor-pointer hover:bg-[#21A366] hover:text-white group">
-          <div className="w-20 h-20 bg-track-dark flex items-center justify-center transform -skew-x-12 shadow-[4px_4px_0px_#010F1A] group-hover:shadow-[4px_4px_0px_white]">
-            <FileSpreadsheet className="w-10 h-10 text-[#21A366] group-hover:text-white stroke-[2.5]" />
+
+        {/* Existing Export types card group */}
+        <div className="flex flex-col gap-6">
+          <div onClick={() => setToast("GENERATING PDF REPORT BUNDLE")} className="brutal-card p-6 flex items-center gap-6 cursor-pointer hover:bg-track-coral hover:text-white group flex-1">
+            <div className="w-16 h-16 bg-track-dark flex items-center justify-center transform -skew-x-12 shadow-[4px_4px_0px_#010F1A] group-hover:shadow-[4px_4px_0px_white]">
+              <FileText className="w-8 h-8 text-track-coral group-hover:text-white stroke-[2.5]" />
+            </div>
+            <div>
+              <h3 className="text-2xl editorial-heading-bebas text-track-dark group-hover:text-white">PDF REPORTS</h3>
+              <p className="text-sm font-black text-track-dark/60 uppercase group-hover:text-white/80">Official start lists and results</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-3xl editorial-heading-bebas text-track-dark group-hover:text-white">EXCEL EXPORTS</h3>
-            <p className="text-sm font-black text-track-dark/60 uppercase group-hover:text-white/80">Formatted meet data and analytics</p>
+          
+          <div className="brutal-card p-6 flex items-center gap-6 cursor-pointer hover:bg-[#21A366] hover:text-white group flex-1">
+            <div className="w-16 h-16 bg-track-dark flex items-center justify-center transform -skew-x-12 shadow-[4px_4px_0px_#010F1A] group-hover:shadow-[4px_4px_0px_white]">
+              <FileSpreadsheet className="w-8 h-8 text-[#21A366] group-hover:text-white stroke-[2.5]" />
+            </div>
+            <div>
+              <h3 className="text-2xl editorial-heading-bebas text-track-dark group-hover:text-white">EXCEL EXPORTS</h3>
+              <p className="text-sm font-black text-track-dark/60 uppercase group-hover:text-white/80">Formatted meet data and analytics</p>
+            </div>
           </div>
-        </div>
-        
-        <div className="brutal-card p-8 flex flex-col items-center justify-center text-center gap-6 cursor-pointer hover:bg-track-sand hover:text-track-dark group">
-          <div className="w-20 h-20 bg-track-dark flex items-center justify-center transform -skew-x-12 shadow-[4px_4px_0px_#010F1A] group-hover:shadow-[4px_4px_0px_white]">
-            <FileJson className="w-10 h-10 text-track-sand group-hover:text-track-dark stroke-[2.5]" />
-          </div>
-          <div>
-            <h3 className="text-3xl editorial-heading-bebas text-track-dark">RAW CSV/JSON</h3>
-            <p className="text-sm font-black text-track-dark/60 uppercase group-hover:text-track-dark/80">Raw timing and tracking data</p>
+          
+          <div className="brutal-card p-6 flex items-center gap-6 cursor-pointer hover:bg-track-sand hover:text-track-dark group flex-1">
+            <div className="w-16 h-16 bg-track-dark flex items-center justify-center transform -skew-x-12 shadow-[4px_4px_0px_#010F1A] group-hover:shadow-[4px_4px_0px_white]">
+              <FileJson className="w-8 h-8 text-track-sand group-hover:text-track-dark stroke-[2.5]" />
+            </div>
+            <div>
+              <h3 className="text-2xl editorial-heading-bebas text-track-dark">RAW CSV/JSON</h3>
+              <p className="text-sm font-black text-track-dark/60 uppercase group-hover:text-track-dark/80">Raw timing and tracking data</p>
+            </div>
           </div>
         </div>
       </div>
@@ -83,7 +183,7 @@ export default function Reports() {
                   </div>
                 </div>
               </div>
-              <button onClick={(e) => { e.stopPropagation(); alert("Downloading report..."); }} className="brutal-button p-3 bg-white hover:bg-track-lagoon shadow-[4px_4px_0px_#010F1A]">
+              <button onClick={(e) => { e.stopPropagation(); setToast(`DOWNLOADING: ${report.title}`); }} className="brutal-button p-3 bg-white hover:bg-track-lagoon shadow-[4px_4px_0px_#010F1A]">
                 <Download className="w-5 h-5 stroke-[3]" />
               </button>
             </div>

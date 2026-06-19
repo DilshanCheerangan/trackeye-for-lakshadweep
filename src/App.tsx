@@ -11,6 +11,9 @@ import VideoAnalysis from './pages/VideoAnalysis';
 import Analytics from './pages/Analytics';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import Islands from './pages/Islands';
+import Approvals from './pages/Approvals';
+import StartLists from './pages/StartLists';
 
 function App() {
   return (
@@ -21,6 +24,9 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="athletes" element={<Athletes />} />
           <Route path="competitions" element={<Competitions />} />
+          <Route path="islands" element={<Islands />} />
+          <Route path="approvals" element={<Approvals />} />
+          <Route path="start-lists" element={<StartLists />} />
           <Route path="track-events" element={<TrackEvents />} />
           <Route path="field-events" element={<FieldEvents />} />
           <Route path="live-capture" element={<LiveCapture />} />

@@ -53,3 +53,82 @@ class CompetitionUpdate(BaseModel):
     events_total: Optional[int] = None
     events_completed: Optional[int] = None
     color: Optional[str] = None
+
+class IslandBase(BaseModel):
+    name: str
+    manager: str
+    coach: str
+    gold: int = 0
+    silver: int = 0
+    bronze: int = 0
+    color: str = "bg-white"
+
+class IslandCreate(IslandBase):
+    pass
+
+class IslandResponse(IslandBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class TrackEventBase(BaseModel):
+    competition_id: int
+    name: str
+    event_type: str
+    status: str = "PENDING"
+
+class TrackEventCreate(TrackEventBase):
+    pass
+
+class TrackEventResponse(TrackEventBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class TrackEventUpdate(BaseModel):
+    status: Optional[str] = None
+
+class EntryBase(BaseModel):
+    entry_id: str
+    athlete_name: str
+    island: str
+    event_name: str
+    age_group: str
+    age_check: str = "PASS"
+    dup_check: str = "PASS"
+    clash_check: str = "PASS"
+    status: str = "PENDING"
+
+class EntryCreate(EntryBase):
+    pass
+
+class EntryUpdate(BaseModel):
+    status: str
+
+class EntryResponse(EntryBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class ResultBase(BaseModel):
+    event_id: int
+    athlete_name: str
+    island: str
+    position: int
+    mark: str
+    reaction: Optional[str] = None
+    is_pb: bool = False
+    new_record: Optional[str] = None
+    lane_or_order: Optional[int] = None
+
+class ResultCreate(ResultBase):
+    pass
+
+class ResultResponse(ResultBase):
+    id: int
+
+    class Config:
+        from_attributes = True

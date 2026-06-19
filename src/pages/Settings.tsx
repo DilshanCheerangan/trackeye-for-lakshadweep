@@ -1,4 +1,5 @@
 import { Save, Camera, Cpu, Globe, Shield, Bell } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 const tabs = [
   { id: 'general', label: 'GENERAL', icon: <Globe className="w-5 h-5" /> },
@@ -9,6 +10,15 @@ const tabs = [
 ];
 
 export default function Settings() {
+  const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   return (
     <div className="pb-10 pt-4 px-2 md:px-0">
       {/* Header */}
@@ -94,11 +104,12 @@ export default function Settings() {
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-8 mt-8 border-t-4 border-track-dark flex justify-end gap-4">
-                <button onClick={() => alert("Changes discarded.")} className="px-6 py-3 font-black text-track-dark uppercase tracking-widest border-4 border-track-dark hover:bg-track-foam transition-colors">
+              <div className="pt-8 mt-8 border-t-4 border-track-dark flex justify-end gap-4 items-center">
+                {toast && <div className="px-4 py-2 bg-track-lagoon border-4 border-track-dark font-black text-track-dark animate-pulse text-sm transform -skew-x-6">{toast}</div>}
+                <button onClick={() => setToast("CHANGES DISCARDED")} className="px-6 py-3 font-black text-track-dark uppercase tracking-widest border-4 border-track-dark hover:bg-track-foam transition-colors">
                   CANCEL
                 </button>
-                <button onClick={() => alert("Settings saved successfully!")} className="px-8 py-3 bg-track-coral text-white font-black uppercase tracking-widest border-4 border-track-dark shadow-[4px_4px_0px_#010F1A] hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all flex items-center gap-2">
+                <button onClick={() => setToast("SETTINGS SAVED SUCCESSFULLY")} className="px-8 py-3 bg-track-coral text-white font-black uppercase tracking-widest border-4 border-track-dark shadow-[4px_4px_0px_#010F1A] hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all flex items-center gap-2">
                   <Save className="w-5 h-5 stroke-[3]" /> SAVE CHANGES
                 </button>
               </div>

@@ -1,11 +1,24 @@
-import { Camera, Maximize, AlertTriangle, Play } from 'lucide-react';
+import { Camera, Maximize, AlertTriangle, Play, Smartphone, Zap, Save, Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function LiveCapture() {
+  const [cameraStatus, setCameraStatus] = useState("ONLINE");
+  const [toast, setToast] = useState("");
   const [liveSpeed, setLiveSpeed] = useState<number>(38.2);
   const [liveEvent, setLiveEvent] = useState<string>("MEN'S 100M FINAL");
 
+  const [fps, setFps] = useState("120 FPS");
+  const [startMode, setStartMode] = useState("AI GUN DETECTION");
+  const [autoStorage, setAutoStorage] = useState(true);
+
   const [feedSrc, setFeedSrc] = useState<string>(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/video/feed`);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const handleFeedError = () => {
     setFeedSrc("https://images.unsplash.com/photo-1522850937840-0a256a4b1307?auto=format&fit=crop&q=80&w=1200");
@@ -27,7 +40,7 @@ export default function LiveCapture() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
         <div>
           <h1 className="text-6xl md:text-8xl editorial-heading-bebas text-track-dark leading-none">LIVE CAPTURE HUD</h1>
-          <p className="text-xl font-black text-track-dark/60 uppercase tracking-widest border-l-4 border-track-coral pl-3 mt-2">{liveEvent} • Active camera feeds and CV analysis.</p>
+          <p className="text-xl font-black text-track-dark/60 uppercase tracking-widest border-l-4 border-track-coral pl-3 mt-2">{liveEvent} • Smartphone CV active.</p>
         </div>
         <div className="flex items-center gap-4 bg-track-dark text-white px-4 py-3 border-4 border-track-dark shadow-[4px_4px_0px_#00C8C8] transform -skew-x-6">
           <div className="flex items-center gap-2">
@@ -68,10 +81,13 @@ export default function LiveCapture() {
               <div className="absolute inset-x-0 bottom-0 p-4 flex justify-between items-end bg-gradient-to-t from-track-dark/90 to-transparent">
                 <div className="flex gap-4">
                   <div className="bg-white px-3 py-1 font-black text-track-dark text-xs uppercase border-l-4 border-track-lagoon">
-                    CAM_01_FINISH
+                    MAIN CAMERA
                   </div>
                   <div className="bg-white px-3 py-1 font-black text-track-dark text-xs uppercase border-l-4 border-track-foam">
-                    1000 FPS
+                    {fps}
+                  </div>
+                  <div className="bg-white px-3 py-1 font-black text-track-dark text-xs uppercase border-l-4 border-track-coral">
+                    SMARTPHONE
                   </div>
                 </div>
                 <button onClick={() => { try { document.documentElement.requestFullscreen(); } catch(e) {} }} className="p-2 bg-white/10 hover:bg-white text-white hover:text-track-dark transition-colors border-2 border-white/20">
@@ -80,16 +96,23 @@ export default function LiveCapture() {
               </div>
             </div>
             
-            <div className="flex justify-between items-center mt-4 px-2 pb-2">
-              <div className="flex gap-4">
-                <button onClick={() => alert("Frame captured and saved to Reports!")} className="brutal-button bg-track-coral text-white px-4 py-2 text-sm shadow-[4px_4px_0px_#010F1A]">
-                  <Camera className="w-4 h-4 mr-2" /> Capture Frame
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-4 px-2 pb-2 gap-4">
+              <div className="flex flex-wrap gap-4">
+                {toast && <div className="px-4 py-2 bg-track-foam border-4 border-track-dark font-black text-track-dark animate-pulse transform -skew-x-6 text-sm">{toast}</div>}
+                <button onClick={() => setToast("FRAME SAVED TO REPORTS")} className="brutal-button bg-track-coral text-white px-4 py-2 text-sm shadow-[4px_4px_0px_#010F1A]">
+                  <Camera className="w-4 h-4 mr-2 stroke-[3]" />
+                  Capture Frame
                 </button>
-                <button onClick={() => alert("Replaying last 5 seconds from cache.")} className="brutal-button bg-white text-track-dark px-4 py-2 text-sm shadow-[4px_4px_0px_#010F1A]">
-                  <Play className="w-4 h-4 mr-2" /> Replay Last 5s
+                <button onClick={() => setToast("REPLAYING BUFFER")} className="brutal-button bg-white text-track-dark px-4 py-2 text-sm shadow-[4px_4px_0px_#010F1A]">
+                  <Play className="w-4 h-4 mr-2 stroke-[3]" />
+                  Replay Last 5s
+                </button>
+                <button onClick={() => setStartMode(startMode === "MANUAL START" ? "AI GUN DETECTION" : "MANUAL START")} className={`brutal-button px-4 py-2 text-sm shadow-[4px_4px_0px_#010F1A] ${startMode === 'MANUAL START' ? 'bg-track-lagoon text-track-dark' : 'bg-track-dark text-white'}`}>
+                  <Zap className="w-4 h-4 mr-2 stroke-[3]" />
+                  {startMode === "MANUAL START" ? "MANUAL START" : "AI GUN: ARMED"}
                 </button>
               </div>
-              <div className="flex items-center gap-2 text-track-lagoon">
+              <div className="flex items-center gap-2 text-track-lagoon shrink-0">
                 <AlertTriangle className="w-5 h-5 stroke-[3]" />
                 <span className="text-sm font-black uppercase tracking-widest">Wind: +1.2 m/s</span>
               </div>
@@ -98,33 +121,68 @@ export default function LiveCapture() {
         </div>
 
         <div className="space-y-8">
-          <div className="brutal-card p-0 h-full flex flex-col">
-            <div className="p-4 border-b-8 border-track-dark bg-track-lagoon">
-              <h3 className="font-black text-3xl editorial-heading-bebas text-track-dark">SYSTEM STATUS</h3>
+          <div className="brutal-card p-0 flex flex-col">
+            <div className="p-4 border-b-8 border-track-dark bg-track-lagoon flex justify-between items-center">
+              <h3 className="font-black text-2xl editorial-heading-bebas text-track-dark">CAMERA SETUP</h3>
+              <Smartphone className="w-6 h-6 text-track-dark" />
             </div>
-            <div className="p-6 space-y-6 flex-1 bg-white">
-              <div className="flex justify-between items-center border-b-4 border-track-dark/10 pb-4">
+            <div className="p-6 space-y-4 bg-white">
+              <div>
+                <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Capture FPS</label>
+                <select value={fps} onChange={(e) => setFps(e.target.value)} className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase cursor-pointer">
+                  <option value="60 FPS">60 FPS (Standard Mobile)</option>
+                  <option value="120 FPS">120 FPS (High Speed)</option>
+                  <option value="240 FPS">240 FPS (Slo-Mo)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Start Detection Mode</label>
+                <select value={startMode} onChange={(e) => setStartMode(e.target.value)} className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase cursor-pointer">
+                  <option value="AI GUN DETECTION">AI Gun Detection (Audio)</option>
+                  <option value="MANUAL START">Manual Start</option>
+                </select>
+              </div>
+              <div className="flex items-center justify-between pt-4 border-t-4 border-track-dark/10">
+                <span className="text-sm font-black text-track-dark uppercase">Auto Storage</span>
+                <button 
+                  onClick={() => setAutoStorage(!autoStorage)}
+                  className={`relative inline-flex h-6 w-11 items-center border-2 border-track-dark ${autoStorage ? 'bg-track-coral' : 'bg-track-foam'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform bg-white transition ${autoStorage ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              </div>
+              {autoStorage && (
+                <div className="flex items-center gap-2 text-xs font-black text-track-dark/60 uppercase mt-2">
+                  <Save className="w-3 h-3" />
+                  Saving to Cloud Database
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="brutal-card p-0 flex flex-col">
+            <div className="p-4 border-b-8 border-track-dark bg-track-foam">
+              <h3 className="font-black text-2xl editorial-heading-bebas text-track-dark">SYSTEM STATUS</h3>
+            </div>
+            <div className="p-4 space-y-4 flex-1 bg-white">
+              <div className="flex justify-between items-center border-b-4 border-track-dark/10 pb-2">
                 <span className="text-sm font-black text-track-dark/60 uppercase">Timing Laser</span>
                 <span className="text-sm font-black text-track-lagoon bg-track-dark px-2 py-1 transform -skew-x-6">LOCKED</span>
               </div>
-              <div className="flex justify-between items-center border-b-4 border-track-dark/10 pb-4">
+              <div className="flex justify-between items-center border-b-4 border-track-dark/10 pb-2">
                 <span className="text-sm font-black text-track-dark/60 uppercase">Wind Gauge</span>
                 <span className="text-sm font-black text-track-lagoon bg-track-dark px-2 py-1 transform -skew-x-6">SYNCED</span>
               </div>
-              <div className="flex justify-between items-center border-b-4 border-track-dark/10 pb-4">
-                <span className="text-sm font-black text-track-dark/60 uppercase">Start Pistol</span>
-                <span className="text-sm font-black text-track-coral bg-track-dark px-2 py-1 transform -skew-x-6 animate-pulse">ARMED</span>
-              </div>
               
-              <div className="pt-4 mt-auto">
-                <h4 className="font-black text-lg text-track-dark uppercase mb-4 border-l-4 border-track-coral pl-3">LANE ASSIGNMENTS</h4>
-                <div className="space-y-3">
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map(lane => (
-                    <div key={lane} className="flex items-center gap-3 bg-track-foam border-2 border-track-dark p-2 hover:-translate-y-1 hover:shadow-[4px_4px_0px_#010F1A] transition-all cursor-pointer">
-                      <div className="w-8 h-8 bg-track-dark text-white flex items-center justify-center font-black text-lg transform -skew-x-6">
+              <div className="pt-2 mt-auto">
+                <h4 className="font-black text-sm text-track-dark uppercase mb-2 border-l-4 border-track-coral pl-3">LANE ASSIGNMENTS</h4>
+                <div className="space-y-2">
+                  {[1, 2, 3, 4, 5, 6].map(lane => (
+                    <div key={lane} className="flex items-center gap-2 bg-track-foam border-2 border-track-dark p-1.5 hover:-translate-y-1 hover:shadow-[2px_2px_0px_#010F1A] transition-all cursor-pointer">
+                      <div className="w-6 h-6 bg-track-dark text-white flex items-center justify-center font-black text-sm transform -skew-x-6">
                         {lane}
                       </div>
-                      <div className="flex-1 h-3 bg-track-dark/10 relative">
+                      <div className="flex-1 h-2 bg-track-dark/10 relative">
                         <div className="absolute inset-y-0 left-0 bg-track-coral" style={{ width: `${Math.random() * 100}%` }}></div>
                       </div>
                     </div>

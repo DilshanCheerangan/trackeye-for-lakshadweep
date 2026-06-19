@@ -12,7 +12,7 @@ export default function TopBar() {
   return (
     <header className="h-20 bg-track-foam border-b-8 border-track-dark sticky top-0 z-10 px-6 flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <button onClick={() => alert("Mobile menu functionality toggled.")} className="md:hidden p-2 bg-white border-4 border-track-dark hover:bg-track-lagoon transition-colors shadow-[4px_4px_0px_#010F1A]">
+        <button className="md:hidden p-2 bg-white border-4 border-track-dark hover:bg-track-lagoon transition-colors shadow-[4px_4px_0px_#010F1A]">
           <Menu className="w-6 h-6 stroke-[3]" />
         </button>
         <div className="hidden md:flex flex-col">
@@ -32,9 +32,12 @@ export default function TopBar() {
         </div>
         
         <div className="flex items-center gap-4">
-          <button onClick={() => alert("No new notifications at this time.")} className="relative p-2 bg-white border-4 border-track-dark hover:bg-track-lagoon transition-colors shadow-[4px_4px_0px_#010F1A] active:translate-y-1 active:translate-x-1 active:shadow-none">
+          <button onClick={() => {
+            const bell = document.getElementById('notification-bell');
+            if (bell) bell.classList.remove('animate-pulse');
+          }} className="relative p-2 bg-white border-4 border-track-dark hover:bg-track-lagoon transition-colors shadow-[4px_4px_0px_#010F1A] active:translate-y-1 active:translate-x-1 active:shadow-none">
             <Bell className="w-5 h-5 stroke-[3]" />
-            <span className="absolute -top-2 -right-2 w-4 h-4 bg-track-coral border-2 border-track-dark rounded-full animate-pulse"></span>
+            <span id="notification-bell" className="absolute -top-2 -right-2 w-4 h-4 bg-track-coral border-2 border-track-dark rounded-full animate-pulse"></span>
           </button>
           
           <div className="flex items-center gap-3 pl-4 border-l-4 border-track-dark">

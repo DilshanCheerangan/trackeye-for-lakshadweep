@@ -1,4 +1,4 @@
-import { Search, Plus, Filter, MapPin, Award, Trash2 } from 'lucide-react';
+import { Search, Plus, Filter, MapPin, Award, Trash2, X, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface Athlete {
@@ -15,7 +15,9 @@ export default function Athletes() {
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAthlete, setSelectedAthlete] = useState<Athlete | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [toast, setToast] = useState("");
   const [newAthlete, setNewAthlete] = useState({
     athlete_id: '',
     name: '',
@@ -24,6 +26,13 @@ export default function Athletes() {
     pb: '',
     status: 'ACTIVE'
   });
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchAthletes = () => {
     fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/athletes/`)
@@ -55,7 +64,7 @@ export default function Athletes() {
         setNewAthlete({ athlete_id: '', name: '', event: '', island: '', pb: '', status: 'ACTIVE' });
         fetchAthletes(); // Refresh list
       } else {
-        alert("Failed to register athlete. Make sure Athlete ID is unique.");
+        setToast("ERROR: FAILED TO REGISTER (CHECK ID)");
       }
     } catch (err) {
       console.error(err);
@@ -71,7 +80,7 @@ export default function Athletes() {
         if (response.ok) {
           fetchAthletes();
         } else {
-          alert("Failed to delete athlete.");
+          setToast("ERROR: FAILED TO DELETE");
         }
       } catch (err) {
         console.error(err);
@@ -132,8 +141,11 @@ export default function Athletes() {
             className="w-full bg-transparent border-none focus:outline-none px-4 font-black text-track-dark uppercase tracking-wider placeholder:text-track-dark/30"
           />
         </div>
-        <button onClick={() => alert("Filters functionality is under development.")} className="bg-track-dark text-white font-black uppercase px-6 py-3 border-4 border-track-dark flex items-center gap-2 hover:bg-track-foam hover:text-track-dark transition-colors">
-          <Filter className="w-5 h-5" />
+        
+        {toast && <div className="px-6 py-3 bg-track-foam border-4 border-track-dark font-black text-track-dark animate-pulse transform -skew-x-6">{toast}</div>}
+
+        <button onClick={() => setToast("FILTERS APPLIED")} className="bg-track-dark text-white font-black uppercase px-6 py-3 border-4 border-track-dark flex items-center gap-2 hover:bg-track-foam hover:text-track-dark transition-colors">
+          <Filter className="w-5 h-5 stroke-[3]" />
           FILTERS
         </button>
       </div>
@@ -167,7 +179,7 @@ export default function Athletes() {
                   </td>
                 </tr>
               ) : filteredAthletes.map((athlete, i) => (
-                <tr key={i} className="border-b-4 border-track-dark hover:bg-track-foam/50 transition-colors group">
+                <tr key={i} onClick={() => setSelectedAthlete(athlete)} className="border-b-4 border-track-dark hover:bg-track-foam/50 transition-colors group cursor-pointer">
                   <td className="p-4 border-r-4 border-track-dark font-bold text-track-dark/60">{athlete.athlete_id}</td>
                   <td className="p-4 border-r-4 border-track-dark font-black text-lg text-track-dark">
                     <div className="flex items-center gap-3">
@@ -196,8 +208,6 @@ export default function Athletes() {
                     <span className={`px-2 py-1 font-black text-xs uppercase tracking-widest border-2 ${
                       athlete.status === 'ACTIVE' 
                         ? 'bg-track-lagoon/20 text-track-dark border-track-lagoon' 
-                        : athlete.status === 'INJURED'
-                        ? 'bg-track-coral/20 text-track-coral border-track-coral'
                         : 'bg-track-dark/10 text-track-dark/60 border-track-dark/20'
                     }`}>
                       {athlete.status}
@@ -205,7 +215,7 @@ export default function Athletes() {
                   </td>
                   <td className="p-4 text-center">
                     <button 
-                      onClick={() => handleDelete(athlete.id)} 
+                      onClick={(e) => { e.stopPropagation(); handleDelete(athlete.id); }} 
                       className="p-2 text-track-dark/40 hover:text-track-coral transition-colors hover:bg-track-foam border border-transparent hover:border-track-dark rounded"
                       title="Delete Athlete"
                     >
@@ -225,7 +235,7 @@ export default function Athletes() {
           <div className="bg-white border-8 border-track-dark shadow-[12px_12px_0px_#FF7A45] w-full max-w-2xl">
             <div className="p-6 border-b-8 border-track-dark bg-track-foam flex justify-between items-center">
               <h2 className="text-4xl editorial-heading-bebas text-track-dark">REGISTER NEW ATHLETE</h2>
-              <button onClick={() => setIsModalOpen(false)} className="font-black text-track-dark text-xl hover:text-track-coral">X</button>
+              <button onClick={() => setIsModalOpen(false)} className="font-black text-track-dark text-xl hover:text-track-coral"><X className="w-8 h-8" /></button>
             </div>
             <form onSubmit={handleRegister} className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-6">
@@ -259,7 +269,6 @@ export default function Athletes() {
                   <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Status</label>
                   <select value={newAthlete.status} onChange={e => setNewAthlete({...newAthlete, status: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase appearance-none">
                     <option value="ACTIVE">ACTIVE</option>
-                    <option value="INJURED">INJURED</option>
                     <option value="RESTING">RESTING</option>
                   </select>
                 </div>
@@ -271,6 +280,103 @@ export default function Athletes() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Athlete Profile Modal */}
+      {selectedAthlete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-track-dark/80 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white border-8 border-track-dark shadow-[12px_12px_0px_#00C8C8] w-full max-w-5xl my-8">
+            <div className="p-6 border-b-8 border-track-dark bg-track-foam flex justify-between items-center sticky top-0 z-10">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-track-dark text-white flex items-center justify-center font-editorial-bebas text-4xl pt-2 transform -skew-x-6">
+                  {selectedAthlete.name.charAt(0)}
+                </div>
+                <div>
+                  <h2 className="text-4xl editorial-heading-bebas text-track-dark">{selectedAthlete.name}</h2>
+                  <div className="flex gap-4 text-sm font-black uppercase tracking-widest text-track-dark/60 mt-1">
+                    <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {selectedAthlete.island}</span>
+                    <span className="flex items-center gap-1 text-track-lagoon"><Award className="w-4 h-4" /> {selectedAthlete.event}</span>
+                  </div>
+                </div>
+              </div>
+              <button onClick={() => setSelectedAthlete(null)} className="font-black text-track-dark hover:text-track-coral p-2"><X className="w-8 h-8" /></button>
+            </div>
+            
+            <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8 bg-white">
+              {/* Left Column: Stats & PRs */}
+              <div className="space-y-8">
+                <div>
+                  <h3 className="font-black text-xl editorial-heading-bebas text-track-dark border-b-4 border-track-dark pb-2 mb-4 flex items-center gap-2">
+                    <Award className="w-6 h-6 text-track-coral" /> PERSONAL RECORDS
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="bg-track-foam border-4 border-track-dark p-3 flex justify-between items-center">
+                      <span className="font-black uppercase text-sm">100M SPRINT</span>
+                      <span className="font-black text-xl text-track-coral">{selectedAthlete.pb}</span>
+                    </div>
+                    <div className="bg-track-foam border-4 border-track-dark p-3 flex justify-between items-center opacity-70">
+                      <span className="font-black uppercase text-sm">200M SPRINT</span>
+                      <span className="font-black text-xl text-track-dark">20.12s</span>
+                    </div>
+                    <div className="bg-track-foam border-4 border-track-dark p-3 flex justify-between items-center opacity-70">
+                      <span className="font-black uppercase text-sm">LONG JUMP</span>
+                      <span className="font-black text-xl text-track-dark">7.84m</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Analytics & History */}
+              <div className="lg:col-span-2 space-y-8">
+                <div>
+                  <h3 className="font-black text-xl editorial-heading-bebas text-track-dark border-b-4 border-track-dark pb-2 mb-4 flex items-center gap-2">
+                    <TrendingUp className="w-6 h-6 text-track-lagoon" /> PERFORMANCE ANALYTICS
+                  </h3>
+                  <div className="bg-track-dark p-6 border-4 border-track-dark relative h-64 flex items-end gap-2">
+                    {/* Mock Chart */}
+                    <div className="absolute top-4 left-4 text-white/50 font-black text-xs uppercase">100M Time Progression (Season)</div>
+                    {[10.2, 10.15, 10.05, 9.98, 9.92, 9.89, 9.86].map((time, idx) => (
+                      <div key={idx} className="flex-1 flex flex-col items-center group">
+                        <span className="text-track-lagoon font-black text-xs mb-2 opacity-0 group-hover:opacity-100 transition-opacity">{time}s</span>
+                        <div 
+                          className="w-full bg-track-coral border-2 border-track-dark transition-all duration-500 group-hover:bg-track-lagoon"
+                          style={{ height: `${(11 - time) * 40}%` }}
+                        ></div>
+                        <span className="text-white/40 font-bold text-[10px] mt-2">M{idx+1}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-black text-xl editorial-heading-bebas text-track-dark border-b-4 border-track-dark pb-2 mb-4 flex items-center gap-2">
+                    <Calendar className="w-6 h-6 text-track-dark/60" /> COMPETITION HISTORY
+                  </h3>
+                  <div className="space-y-4">
+                    {[
+                      { meet: "NATIONAL CHAMPIONSHIPS 2025", date: "AUG 2025", result: "GOLD", mark: "9.86s" },
+                      { meet: "STATE ATHLETICS MEET", date: "JUN 2025", result: "GOLD", mark: "9.92s" },
+                      { meet: "UNIVERSITY GAMES", date: "APR 2025", result: "SILVER", mark: "10.05s" }
+                    ].map((comp, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-4 border-2 border-track-dark/20 hover:border-track-dark hover:bg-track-foam transition-colors cursor-default">
+                        <div>
+                          <h4 className="font-black text-track-dark uppercase">{comp.meet}</h4>
+                          <span className="text-xs font-bold text-track-dark/60 uppercase">{comp.date}</span>
+                        </div>
+                        <div className="flex items-center gap-6 text-right">
+                          <span className="font-black text-lg text-track-dark">{comp.mark}</span>
+                          <span className={`w-20 text-center px-2 py-1 font-black text-xs uppercase border-2 ${comp.result === 'GOLD' ? 'bg-[#FFD700] border-track-dark text-track-dark' : 'bg-[#C0C0C0] border-track-dark text-track-dark'}`}>
+                            {comp.result}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

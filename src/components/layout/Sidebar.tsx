@@ -9,13 +9,19 @@ import {
   PlaySquare, 
   LineChart, 
   FileText, 
-  Settings 
+  Settings,
+  Map,
+  CheckSquare,
+  ListOrdered
 } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { name: 'Athletes', path: '/dashboard/athletes', icon: Users },
   { name: 'Competitions', path: '/dashboard/competitions', icon: Trophy },
+  { name: 'Islands', path: '/dashboard/islands', icon: Map },
+  { name: 'Athletes', path: '/dashboard/athletes', icon: Users },
+  { name: 'Approvals', path: '/dashboard/approvals', icon: CheckSquare },
+  { name: 'Start Lists', path: '/dashboard/start-lists', icon: ListOrdered },
   { name: 'Track Events', path: '/dashboard/track-events', icon: Activity },
   { name: 'Field Events', path: '/dashboard/field-events', icon: Target },
   { name: 'Live Capture', path: '/dashboard/live-capture', icon: Video },
