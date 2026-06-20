@@ -17,14 +17,15 @@ def get_stats(db: Session = Depends(get_db)):
     # Calculate some other numbers based on competitions
     active_comps = db.query(models.Competition).filter(models.Competition.status == "LIVE").all()
     active_events = sum(comp.events_total - comp.events_completed for comp in active_comps)
+    new_records_count = db.query(models.Result).filter(models.Result.new_record != None, models.Result.new_record != "").count()
     
     return {
         "total_athletes": total_athletes,
         "total_competitions": total_competitions,
-        "active_events": max(3, active_events),
-        "live_streams": len(active_comps) if len(active_comps) > 0 else 1,
+        "active_events": active_events,
+        "live_streams": len(active_comps),
         "results_published": sum(comp.events_completed for comp in db.query(models.Competition).all()),
-        "new_records": 4
+        "new_records": new_records_count
     }
 
 @router.get("/activity")

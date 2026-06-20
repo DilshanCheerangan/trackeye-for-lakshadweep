@@ -59,18 +59,7 @@ export default function Athletes() {
     }
   };
 
-  const isDemo = sessionStorage.getItem('demoMode') === 'true';
-
-  const mockAthletes = [
-    { id: 1, athlete_id: "ATH-1001", name: "MARCUS JOHNSON", event: "100M SPRINT", island: "ANDROTH", pb: "9.86s", status: "ACTIVE" },
-    { id: 2, athlete_id: "ATH-1002", name: "ANDRE DE GRASSE", event: "200M SPRINT", island: "MINICOY", pb: "9.89s", status: "ACTIVE" },
-    { id: 3, athlete_id: "ATH-1003", name: "CHRISTIAN COLEMAN", event: "100M SPRINT", island: "KAVARATTI", pb: "9.92s", status: "INJURED" },
-    { id: 4, athlete_id: "ATH-1004", name: "FERDINAND OMANYALA", event: "100M SPRINT", island: "AGATTI", pb: "9.95s", status: "ACTIVE" },
-    { id: 5, athlete_id: "ATH-1005", name: "AKANI SIMBINE", event: "100M SPRINT", island: "KAVARATTI", pb: "9.98s", status: "RESTING" },
-    { id: 6, athlete_id: "ATH-1006", name: "SARAH CHEN", event: "LONG JUMP", island: "AMINI", pb: "7.15m", status: "ACTIVE" },
-  ];
-
-  const displayAthletes = isDemo ? mockAthletes : athletes;
+  const displayAthletes = athletes;
 
   const filteredAthletes = displayAthletes.filter(athlete => {
     const q = searchQuery.toLowerCase();

@@ -72,15 +72,7 @@ export default function Competitions() {
     }
   };
 
-  const isDemo = sessionStorage.getItem('demoMode') === 'true';
-
-  const mockCompetitions = [
-    { id: 1, name: 'LAKSHADWEEP STATE ATHLETICS CHAMPIONSHIP', date_str: 'MAR 12 - MAR 15, 2026', location: 'KAVARATTI STADIUM', status: 'LIVE', athletes_count: 345, events_total: 42, events_completed: 18, color: 'bg-track-coral' },
-    { id: 2, name: 'SOUTH ZONE JUNIOR QUALIFIERS', date_str: 'APR 05 - APR 08, 2026', location: 'MINICOY SPORTS COMPLEX', status: 'UPCOMING', athletes_count: 210, events_total: 28, events_completed: 0, color: 'bg-track-lagoon' },
-    { id: 3, name: 'ISLAND SCHOOL SPORTS MEET', date_str: 'FEB 20 - FEB 22, 2026', location: 'AGATTI GROUND', status: 'COMPLETED', athletes_count: 520, events_total: 56, events_completed: 56, color: 'bg-track-dark' },
-  ];
-
-  const displayCompetitions = isDemo ? mockCompetitions : competitions;
+  const displayCompetitions = competitions;
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -219,15 +211,7 @@ export default function Competitions() {
             <div className="space-y-4">
               <div className="flex justify-between items-center bg-white border-4 border-track-dark p-3 transform -skew-x-2">
                 <span className="font-black text-track-dark/60 uppercase tracking-widest text-sm">TOTAL MEETS</span>
-                <span className="font-black text-2xl text-track-dark">12</span>
-              </div>
-              <div className="flex justify-between items-center bg-white border-4 border-track-dark p-3 transform skew-x-2">
-                <span className="font-black text-track-dark/60 uppercase tracking-widest text-sm">ACTIVE VENUES</span>
-                <span className="font-black text-2xl text-track-dark">4</span>
-              </div>
-              <div className="flex justify-between items-center bg-white border-4 border-track-dark p-3 transform -skew-x-2">
-                <span className="font-black text-track-dark/60 uppercase tracking-widest text-sm">RECORDS BROKEN</span>
-                <span className="font-black text-2xl text-track-coral">28</span>
+                <span className="font-black text-2xl text-track-dark">{competitions.length}</span>
               </div>
             </div>
           </div>
@@ -239,7 +223,7 @@ export default function Competitions() {
             </div>
             <h3 className="text-3xl editorial-heading-bebas mb-2">RUN SIMULATION</h3>
             <p className="text-sm font-bold text-white/60 mb-6 uppercase">Test camera feeds and timing gates before live events.</p>
-            <button onClick={() => navigate('/live')} className="w-full bg-white text-track-dark font-black uppercase px-4 py-3 border-4 border-track-coral shadow-[4px_4px_0px_#FF7A45] hover:shadow-none hover:translate-y-1 hover:translate-x-1 transition-all">
+            <button onClick={() => navigate('/dashboard/live-capture')} className="w-full bg-white text-track-dark font-black uppercase px-4 py-3 border-4 border-track-coral shadow-[4px_4px_0px_#FF7A45] hover:shadow-none hover:translate-y-1 hover:translate-x-1 transition-all">
               START TEST
             </button>
           </div>

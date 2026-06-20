@@ -44,6 +44,10 @@ class TrackEvent(Base):
     name = Column(String, index=True)
     event_type = Column(String) # TRACK or FIELD
     status = Column(String, default="PENDING")
+    video_path = Column(String, nullable=True)
+    finish_line_x = Column(Integer, default=560)
+    distance_m = Column(Integer, default=100)
+    photo_finish_path = Column(String, nullable=True)
 
 class Entry(Base):
     __tablename__ = "entries"
@@ -70,3 +74,5 @@ class Result(Base):
     is_pb = Column(Boolean, default=False)
     new_record = Column(String, nullable=True)
     lane_or_order = Column(Integer, nullable=True)
+    finish_timestamp = Column(String, nullable=True)
+    average_speed = Column(String, nullable=True)

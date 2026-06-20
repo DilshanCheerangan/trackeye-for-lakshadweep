@@ -8,57 +8,33 @@ export default function Analytics() {
   const [velocityData, setVelocityData] = useState<any[]>([]);
   const [seasonProgression, setSeasonProgression] = useState<any[]>([]);
 
-  const isDemo = sessionStorage.getItem('demoMode') === 'true';
-
-  const mockAthletes = [
-    { id: 1, name: "MARCUS JOHNSON" },
-    { id: 2, name: "ANDRE DE GRASSE" },
-    { id: 3, name: "CHRISTIAN COLEMAN" },
-    { id: 4, name: "SARAH CHEN" }
-  ];
-
-  const displayAthletes = isDemo ? mockAthletes : athletes;
+  const displayAthletes = athletes;
 
   useEffect(() => {
-    if (!isDemo) {
-      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/athletes/`)
-        .then(res => res.json())
-        .then(data => {
-          setAthletes(data);
-          if (data.length > 0) {
-            setSelectedAthlete(data[0].id.toString());
-          }
-        })
-        .catch(err => {
-          console.error(err);
-        });
-    } else {
-      setSelectedAthlete("1");
-    }
-  }, [isDemo]);
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/athletes/`)
+      .then(res => res.json())
+      .then(data => {
+        setAthletes(data);
+        if (data.length > 0) {
+          setSelectedAthlete(data[0].id.toString());
+        }
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }, []);
 
   useEffect(() => {
-    if (selectedAthlete && !isDemo) {
+    if (selectedAthlete) {
       fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/athletes/${selectedAthlete}/analytics`)
         .then(res => res.json())
         .then(data => {
-          setVelocityData(data.velocity);
-          setSeasonProgression(data.progression);
+          setVelocityData(data.velocity || []);
+          setSeasonProgression(data.progression || []);
         })
         .catch(err => console.error(err));
-    } else if (isDemo) {
-      setVelocityData([
-        { split: '10m', time: 1.86, speed: 19.3, avgSpeed: 18.5 },
-        { split: '50m', time: 5.52, speed: 42.8, avgSpeed: 41.0 },
-        { split: '100m', time: 9.86, speed: 39.5, avgSpeed: 37.5 },
-      ]);
-      setSeasonProgression([
-        { meet: 'Doha', time: 10.12, pb: false },
-        { meet: 'Rome', time: 9.98, pb: true },
-        { meet: 'Finals', time: 9.86, pb: true },
-      ]);
     }
-  }, [selectedAthlete, isDemo]);
+  }, [selectedAthlete]);
 
   return (
     <div className="pb-10 pt-4 px-2 md:px-0">

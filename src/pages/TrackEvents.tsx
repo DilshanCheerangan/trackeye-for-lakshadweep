@@ -435,7 +435,7 @@ export default function TrackEvents() {
                     </div>
                     <button 
                       onClick={(e) => handleDeleteEvent(evt.id, e)} 
-                      className={`p-1 bg-white text-track-dark border-2 border-track-dark hover:bg-track-coral hover:text-white transition-colors opacity-0 group-hover:opacity-100`}
+                      className={`p-1 bg-white text-track-dark border-2 border-track-dark hover:bg-track-coral hover:text-white transition-colors`}
                     >
                       <Trash className="w-3.5 h-3.5" />
                     </button>
@@ -464,7 +464,7 @@ export default function TrackEvents() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`w-3 h-3 rounded-full ${selectedEvent.status === 'PENDING' ? 'bg-[#FFD700] animate-pulse' : 'bg-[#21A366]'}`}></span>
-                    <span className={`font-black uppercase tracking-widest text-sm ${selectedEvent.status === 'PENDING' ? 'text-track-dark' : 'text-[#21A366]'}`}>
+                    <span className={`font-black uppercase tracking-widest text-sm ${selectedEvent.status === 'PENDING' ? 'text-track-coral' : 'text-[#21A366]'}`}>
                       {selectedEvent.status === 'PENDING' ? 'UNDER REVIEW / LIVE' : 'OFFICIAL'}
                     </span>
                   </div>
@@ -592,7 +592,7 @@ export default function TrackEvents() {
                               </div>
                             ) : "-"}
                           </td>
-                          <td className="p-4 border-r-4 border-track-dark/10 text-right font-black text-track-dark/40 uppercase text-xs">
+                          <td className="p-4 border-r-4 border-track-dark/10 text-right font-black text-track-dark uppercase text-xs">
                             {result.newRecord ? (
                               <span className="bg-[#FFD700] text-track-dark px-1.5 py-0.5 border-2 border-track-dark font-black tracking-tighter">
                                 {result.newRecord}
@@ -601,7 +601,7 @@ export default function TrackEvents() {
                           </td>
                           <td className="p-4 border-r-4 border-track-dark/10 text-right font-black text-2xl text-track-dark">
                             {result.time === "-" ? (
-                              <span className="text-track-dark/30 font-bold uppercase tracking-widest text-xs">PENDING</span>
+                              <span className="text-track-coral font-bold uppercase tracking-widest text-xs">PENDING</span>
                             ) : (
                               result.time
                             )}

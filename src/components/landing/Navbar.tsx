@@ -5,8 +5,6 @@ import { Menu, X } from 'lucide-react';
 const navLinks = [
   { label: 'FEATURES', href: '#features' },
   { label: 'ISLANDS', href: '#islands' },
-  { label: 'ANALYTICS', href: '#analytics' },
-  { label: 'ATHLETES', href: '#athletes' },
 ];
 
 export default function Navbar() {
@@ -18,7 +16,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 bg-white border-4 border-track-dark flex items-center justify-center overflow-hidden transform -skew-x-6 group-hover:border-track-coral transition-all">
-            <img src="/lak_athletics_logo.png" alt="LAK Athletics Logo" className="w-full h-full object-contain p-0.5" />
+            <img src="/lak_athletics_logo_old.png" alt="LAK Athletics Logo" className="w-full h-full object-contain p-0.5" />
           </div>
           <span className="text-3xl editorial-heading-bebas text-track-dark tracking-wider group-hover:text-track-coral transition-colors">
             TRACKEYE

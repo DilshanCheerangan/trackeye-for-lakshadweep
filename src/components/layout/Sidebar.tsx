@@ -7,7 +7,6 @@ import {
   Target, 
   Video, 
   PlaySquare, 
-  LineChart, 
   FileText, 
   Settings,
   Map,
@@ -26,7 +25,6 @@ const navItems = [
   { name: 'Field Events', path: '/dashboard/field-events', icon: Target },
   { name: 'Live Capture', path: '/dashboard/live-capture', icon: Video },
   { name: 'Video Analysis', path: '/dashboard/video-analysis', icon: PlaySquare },
-  { name: 'Analytics', path: '/dashboard/analytics', icon: LineChart },
   { name: 'Reports', path: '/dashboard/reports', icon: FileText },
   { name: 'Settings', path: '/dashboard/settings', icon: Settings },
 ];
@@ -39,8 +37,8 @@ export default function Sidebar() {
     <aside className="w-64 bg-track-foam border-r-8 border-track-dark hidden md:flex flex-col h-screen sticky top-0 shadow-[8px_0px_0px_rgba(0,0,0,0.05)] z-20">
       <div className="p-6 border-b-8 border-track-dark bg-track-coral transform">
         <NavLink to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 bg-white border-4 border-track-dark flex items-center justify-center transform -skew-x-6 group-hover:bg-track-dark transition-colors">
-            <Activity className="w-6 h-6 text-track-dark group-hover:text-white stroke-[3] transition-colors" />
+          <div className="w-16 h-16 bg-white border-4 border-track-dark flex items-center justify-center transform -skew-x-6 group-hover:bg-track-dark transition-colors overflow-hidden">
+            <img src="/lak_athletics_logo_old.png" alt="LAK Logo" className="w-full h-full object-contain p-1" />
           </div>
           <span className="text-3xl editorial-heading-bebas text-track-dark group-hover:text-white transition-colors">
             TRACKEYE

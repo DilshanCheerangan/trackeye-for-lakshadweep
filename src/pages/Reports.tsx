@@ -3,6 +3,11 @@ import { useState, useEffect } from 'react';
 
 export default function Reports() {
   const [toast, setToast] = useState("");
+  const [events, setEvents] = useState<any[]>([]);
+  const [competitions, setCompetitions] = useState<any[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string | number>("");
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (toast) {
@@ -10,6 +15,62 @@ export default function Reports() {
       return () => clearTimeout(timer);
     }
   }, [toast]);
+
+  useEffect(() => {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    
+    // Fetch Competitions
+    fetch(`${API_URL}/competitions/`)
+      .then(res => res.json())
+      .then(data => setCompetitions(data || []))
+      .catch(err => console.error("Failed to fetch competitions:", err));
+
+    // Fetch Events
+    fetch(`${API_URL}/events/`)
+      .then(res => res.json())
+      .then(data => {
+        const list = data || [];
+        setEvents(list);
+        if (list.length > 0) {
+          setSelectedEventId(list[0].id);
+        } else {
+          setLoading(false);
+        }
+      })
+      .catch(err => {
+        console.error("Failed to fetch events:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!selectedEventId) {
+      setResults([]);
+      return;
+    }
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    setLoading(true);
+    fetch(`${API_URL}/events/${selectedEventId}/results`)
+      .then(res => res.json())
+      .then(data => {
+        const sorted = (data || []).sort((a: any, b: any) => a.position - b.position);
+        setResults(sorted);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch results:", err);
+        setResults([]);
+        setLoading(false);
+      });
+  }, [selectedEventId]);
+
+  const selectedEvent = events.find(e => e.id === Number(selectedEventId));
+  const selectedComp = selectedEvent ? competitions.find(c => c.id === selectedEvent.competition_id) : null;
+
+  const podiumGold = results.find(r => r.position === 1);
+  const podiumSilver = results.find(r => r.position === 2);
+  const podiumBronze = results.find(r => r.position === 3);
+
   const reports = [
     { title: "OFFICIAL RESULTS - MEN'S 100M FINAL", time: "10 MINS AGO", type: "pdf", size: "1.2 MB" },
     { title: "START LIST - WOMEN'S LONG JUMP", time: "1 HOUR AGO", type: "pdf", size: "0.8 MB" },
@@ -46,80 +107,123 @@ export default function Reports() {
             <span className="bg-track-dark text-track-lagoon px-3 py-1 font-black text-sm uppercase transform -skew-x-6">AUTO-GENERATED</span>
           </div>
           <div className="p-6 flex-1 z-10 relative">
-            <div className="flex justify-between items-end border-b-4 border-track-dark pb-4 mb-4">
-              <div>
-                <h4 className="text-2xl font-black text-track-dark uppercase tracking-wider">MEN'S 100M FINAL</h4>
-                <div className="flex gap-4 mt-2 text-sm font-bold text-track-dark/60 uppercase">
-                  <span>DATE: TODAY</span>
-                  <span>WIND: +1.2</span>
-                  <span>VENUE: MAIN STADIUM</span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => setToast("GENERATING PDF...")} className="p-2 border-4 border-track-dark bg-track-coral text-white hover:bg-track-dark transition-colors shadow-[2px_2px_0px_#010F1A]" title="Export PDF">
-                  <FileText className="w-5 h-5 stroke-[3]" />
-                </button>
-                <button onClick={() => setToast("GENERATING EXCEL...")} className="p-2 border-4 border-track-dark bg-[#21A366] text-white hover:bg-track-dark transition-colors shadow-[2px_2px_0px_#010F1A]" title="Export Excel">
-                  <FileSpreadsheet className="w-5 h-5 stroke-[3]" />
-                </button>
-              </div>
-            </div>
-
-            {/* Medalists */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-track-foam border-4 border-track-dark p-3 flex flex-col items-center text-center transform -skew-x-2">
-                <div className="w-10 h-10 bg-[#FFD700] rounded-full flex items-center justify-center border-2 border-track-dark mb-2 shadow-[2px_2px_0px_#010F1A]">
-                  <Medal className="w-5 h-5 text-track-dark stroke-[3]" />
-                </div>
-                <span className="text-xs font-black text-track-dark/60 uppercase">GOLD</span>
-                <span className="font-black text-sm uppercase mt-1">M. JOHNSON</span>
-                <span className="font-black text-track-coral text-lg">9.862s</span>
-              </div>
-              <div className="bg-track-foam border-4 border-track-dark p-3 flex flex-col items-center text-center transform -skew-x-2">
-                <div className="w-10 h-10 bg-[#C0C0C0] rounded-full flex items-center justify-center border-2 border-track-dark mb-2 shadow-[2px_2px_0px_#010F1A]">
-                  <Medal className="w-5 h-5 text-track-dark stroke-[3]" />
-                </div>
-                <span className="text-xs font-black text-track-dark/60 uppercase">SILVER</span>
-                <span className="font-black text-sm uppercase mt-1">A. DE GRASSE</span>
-                <span className="font-black text-track-coral text-lg">9.868s</span>
-              </div>
-              <div className="bg-track-foam border-4 border-track-dark p-3 flex flex-col items-center text-center transform -skew-x-2">
-                <div className="w-10 h-10 bg-[#CD7F32] rounded-full flex items-center justify-center border-2 border-track-dark mb-2 shadow-[2px_2px_0px_#010F1A]">
-                  <Medal className="w-5 h-5 text-track-dark stroke-[3]" />
-                </div>
-                <span className="text-xs font-black text-track-dark/60 uppercase">BRONZE</span>
-                <span className="font-black text-sm uppercase mt-1">C. COLEMAN</span>
-                <span className="font-black text-track-coral text-lg">9.891s</span>
-              </div>
-            </div>
-
-            {/* Table */}
-            <table className="w-full text-left border-collapse bg-white border-4 border-track-dark">
-              <thead>
-                <tr className="bg-track-foam border-b-4 border-track-dark">
-                  <th className="p-2 font-black text-xs uppercase tracking-widest text-track-dark border-r-4 border-track-dark text-center">RK</th>
-                  <th className="p-2 font-black text-xs uppercase tracking-widest text-track-dark border-r-4 border-track-dark text-center">LN</th>
-                  <th className="p-2 font-black text-xs uppercase tracking-widest text-track-dark border-r-4 border-track-dark">ATHLETE</th>
-                  <th className="p-2 font-black text-xs uppercase tracking-widest text-track-dark text-right">TIME</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { rank: 1, lane: 4, name: "M. JOHNSON", time: "9.862s" },
-                  { rank: 2, lane: 5, name: "A. DE GRASSE", time: "9.868s" },
-                  { rank: 3, lane: 3, name: "C. COLEMAN", time: "9.891s" },
-                  { rank: 4, lane: 6, name: "F. OMANYALA", time: "9.924s" },
-                  { rank: 5, lane: 2, name: "A. SIMBINE", time: "9.931s" }
-                ].map((row, i) => (
-                  <tr key={i} className="border-b-2 border-track-dark/20 hover:bg-track-foam/50 transition-colors">
-                    <td className="p-2 border-r-4 border-track-dark font-black text-center bg-track-foam/30">{row.rank}</td>
-                    <td className="p-2 border-r-4 border-track-dark font-bold text-track-dark/60 text-center">{row.lane}</td>
-                    <td className="p-2 border-r-4 border-track-dark font-bold uppercase">{row.name}</td>
-                    <td className="p-2 font-black text-track-coral text-right">{row.time}</td>
-                  </tr>
+            {/* Event Selector Dropdown */}
+            <div className="mb-6 flex flex-col gap-2">
+              <label className="text-xs font-black uppercase text-track-dark/60 tracking-wider">Select Track or Field Event</label>
+              <select 
+                value={selectedEventId} 
+                onChange={(e) => setSelectedEventId(e.target.value)}
+                className="w-full p-3 border-4 border-track-dark bg-white font-black text-track-dark shadow-[4px_4px_0px_#010F1A] focus:outline-none uppercase"
+              >
+                <option value="" disabled>-- Choose Event --</option>
+                {events.map((evt) => (
+                  <option key={evt.id} value={evt.id}>
+                    {evt.name} ({evt.status})
+                  </option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+            </div>
+
+            {loading ? (
+              <div className="text-center py-12 font-black text-track-dark/40 uppercase">Loading Results...</div>
+            ) : !selectedEventId || events.length === 0 ? (
+              <div className="text-center py-12 flex flex-col items-center justify-center">
+                <Trophy className="w-16 h-16 text-track-dark/20 mb-4 animate-bounce" />
+                <p className="font-black text-xl text-track-dark uppercase">No events available</p>
+                <p className="text-sm font-bold text-track-dark/60 uppercase mt-1">Please add events and save official results first.</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex justify-between items-end border-b-4 border-track-dark pb-4 mb-4">
+                  <div>
+                    <h4 className="text-2xl font-black text-track-dark uppercase tracking-wider">{selectedEvent.name}</h4>
+                    <div className="flex gap-4 mt-2 text-sm font-bold text-track-dark/60 uppercase">
+                      <span>DATE: {selectedComp ? selectedComp.date_str : "TODAY"}</span>
+                      {selectedEvent.event_type === 'TRACK' && <span>WIND: +1.2</span>}
+                      <span>VENUE: {selectedComp ? selectedComp.location : "MAIN STADIUM"}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => setToast(`GENERATING PDF FOR ${selectedEvent.name}...`)} className="p-2 border-4 border-track-dark bg-track-coral text-white hover:bg-track-dark transition-colors shadow-[2px_2px_0px_#010F1A]" title="Export PDF">
+                      <FileText className="w-5 h-5 stroke-[3]" />
+                    </button>
+                    <button onClick={() => setToast(`GENERATING EXCEL FOR ${selectedEvent.name}...`)} className="p-2 border-4 border-track-dark bg-[#21A366] text-white hover:bg-track-dark transition-colors shadow-[2px_2px_0px_#010F1A]" title="Export Excel">
+                      <FileSpreadsheet className="w-5 h-5 stroke-[3]" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Medalists */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="bg-track-foam border-4 border-track-dark p-3 flex flex-col items-center text-center transform -skew-x-2">
+                    <div className="w-10 h-10 bg-[#FFD700] rounded-full flex items-center justify-center border-2 border-track-dark mb-2 shadow-[2px_2px_0px_#010F1A]">
+                      <Medal className="w-5 h-5 text-track-dark stroke-[3]" />
+                    </div>
+                    <span className="text-xs font-black text-track-dark/60 uppercase">GOLD</span>
+                    <span className="font-black text-sm uppercase mt-1 truncate max-w-full">
+                      {podiumGold ? podiumGold.athlete_name : "-"}
+                    </span>
+                    <span className="font-black text-track-coral text-lg">
+                      {podiumGold ? podiumGold.mark : "-"}
+                    </span>
+                  </div>
+                  <div className="bg-track-foam border-4 border-track-dark p-3 flex flex-col items-center text-center transform -skew-x-2">
+                    <div className="w-10 h-10 bg-[#C0C0C0] rounded-full flex items-center justify-center border-2 border-track-dark mb-2 shadow-[2px_2px_0px_#010F1A]">
+                      <Medal className="w-5 h-5 text-track-dark stroke-[3]" />
+                    </div>
+                    <span className="text-xs font-black text-track-dark/60 uppercase">SILVER</span>
+                    <span className="font-black text-sm uppercase mt-1 truncate max-w-full">
+                      {podiumSilver ? podiumSilver.athlete_name : "-"}
+                    </span>
+                    <span className="font-black text-track-coral text-lg">
+                      {podiumSilver ? podiumSilver.mark : "-"}
+                    </span>
+                  </div>
+                  <div className="bg-track-foam border-4 border-track-dark p-3 flex flex-col items-center text-center transform -skew-x-2">
+                    <div className="w-10 h-10 bg-[#CD7F32] rounded-full flex items-center justify-center border-2 border-track-dark mb-2 shadow-[2px_2px_0px_#010F1A]">
+                      <Medal className="w-5 h-5 text-track-dark stroke-[3]" />
+                    </div>
+                    <span className="text-xs font-black text-track-dark/60 uppercase">BRONZE</span>
+                    <span className="font-black text-sm uppercase mt-1 truncate max-w-full">
+                      {podiumBronze ? podiumBronze.athlete_name : "-"}
+                    </span>
+                    <span className="font-black text-track-coral text-lg">
+                      {podiumBronze ? podiumBronze.mark : "-"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Table */}
+                <table className="w-full text-left border-collapse bg-white border-4 border-track-dark">
+                  <thead>
+                    <tr className="bg-track-foam border-b-4 border-track-dark">
+                      <th className="p-2 font-black text-xs uppercase tracking-widest text-track-dark border-r-4 border-track-dark text-center">RK</th>
+                      <th className="p-2 font-black text-xs uppercase tracking-widest text-track-dark border-r-4 border-track-dark text-center">LN/ORD</th>
+                      <th className="p-2 font-black text-xs uppercase tracking-widest text-track-dark border-r-4 border-track-dark">ATHLETE</th>
+                      <th className="p-2 font-black text-xs uppercase tracking-widest text-track-dark text-right">MARK</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="p-4 text-center font-bold text-track-dark/40 uppercase">
+                          No results recorded for this event
+                        </td>
+                      </tr>
+                    ) : (
+                      results.map((row, i) => (
+                        <tr key={i} className="border-b-2 border-track-dark/20 hover:bg-track-foam/50 transition-colors">
+                          <td className="p-2 border-r-4 border-track-dark font-black text-center bg-track-foam/30">{row.position}</td>
+                          <td className="p-2 border-r-4 border-track-dark font-bold text-track-dark/60 text-center">{row.lane_or_order || "-"}</td>
+                          <td className="p-2 border-r-4 border-track-dark font-bold uppercase">{row.athlete_name}</td>
+                          <td className="p-2 font-black text-track-coral text-right">{row.mark}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </>
+            )}
           </div>
         </div>
 

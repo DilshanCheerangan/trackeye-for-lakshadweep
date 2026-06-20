@@ -1,6 +1,5 @@
-import { Users, Trophy, Activity, Radio, CheckCircle, Star } from 'lucide-react';
+import { Users, Trophy, Activity, CheckCircle, Star } from 'lucide-react';
 import MetricCard from '../components/ui/MetricCard';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useState, useEffect } from 'react';
 
 
@@ -15,7 +14,6 @@ export default function Dashboard() {
   });
 
   const [competitions, setCompetitions] = useState<any[]>([]);
-  const [performanceData, setPerformanceData] = useState<any[]>([]);
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/stats/`)
@@ -35,37 +33,15 @@ export default function Dashboard() {
       .catch(err => {
         console.error("Failed to fetch competitions:", err);
       });
-
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/stats/activity`)
-      .then(res => res.json())
-      .then(data => setPerformanceData(data))
-      .catch(err => console.error("Failed to fetch activity:", err));
   }, []);
 
-  const isDemo = sessionStorage.getItem('demoMode') === 'true';
-
-  const displayStats = isDemo ? {
-    total_athletes: 1248,
-    total_competitions: 34,
-    active_events: 12,
-    live_streams: 8,
-    results_published: 856,
-    new_records: 14
-  } : stats;
-
-  const displayCompetitions = isDemo ? [
-    { name: "MEN'S 100M FINAL", status: "LIVE", location: "MAIN TRACK", date_str: "NOW" },
-    { name: "WOMEN'S LONG JUMP", status: "LIVE", location: "PIT A", date_str: "NOW" },
-    { name: "MEN'S 400M HURDLES", status: "COMPLETED", location: "BACK SPRINT", date_str: "10M AGO" },
-    { name: "WOMEN'S 1500M HEAT 2", status: "COMPLETED", location: "FULL TRACK", date_str: "1H AGO" },
-    { name: "MEN'S HIGH JUMP", status: "UPCOMING", location: "HIGH JUMP MAT", date_str: "IN 30M" },
-  ] : competitions;
+  const displayStats = stats;
+  const displayCompetitions = competitions;
 
   const metrics = [
     { title: "Total Athletes", value: displayStats.total_athletes, icon: <Users />, trend: displayStats.total_athletes > 0 ? `+${displayStats.total_athletes}` : "0", trendUp: true },
     { title: "Competitions", value: displayStats.total_competitions, icon: <Trophy />, trend: displayStats.total_competitions > 0 ? `+${displayStats.total_competitions}` : "0", trendUp: true },
     { title: "Active Events", value: displayStats.active_events, icon: <Activity />, trend: "LIVE" },
-    { title: "Live Streams", value: displayStats.live_streams, icon: <Radio />, trend: "LIVE" },
     { title: "Results Published", value: displayStats.results_published, icon: <CheckCircle /> },
     { title: "New Records", value: displayStats.new_records, icon: <Star />, trend: "HOT" },
   ];
@@ -90,27 +66,8 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 brutal-card p-8">
-          <div className="flex justify-between items-end mb-8 border-b-4 border-track-dark pb-4">
-            <h3 className="text-4xl editorial-heading-bebas text-track-dark">ACTIVITY VOLUME</h3>
-          </div>
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#010F1A" opacity={0.1} vertical={false} />
-                <XAxis dataKey="time" stroke="#010F1A" opacity={0.8} tick={{fill: '#010F1A', fontWeight: 'bold'}} axisLine={false} tickLine={false} />
-                <YAxis stroke="#010F1A" opacity={0.8} tick={{fill: '#010F1A', fontWeight: 'bold'}} axisLine={false} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#F8FAFC', borderColor: '#010F1A', borderWidth: '4px', borderRadius: '0px', color: '#010F1A', fontWeight: 'bold' }}
-                  itemStyle={{ color: '#010F1A', fontWeight: 'black' }}
-                />
-                <Area type="step" dataKey="athletes" stroke="#010F1A" strokeWidth={4} fillOpacity={1} fill="#00C8C8" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
 
+      <div className="w-full">
         <div className="brutal-card p-0 flex flex-col h-[500px]">
           <div className="flex justify-between items-center p-6 border-b-8 border-track-dark bg-track-lagoon">
             <h3 className="text-3xl editorial-heading-bebas text-track-dark">LIVE EVENTS FEED</h3>

@@ -50,7 +50,7 @@ export default function HeroSection() {
         >
           {/* Eyebrow */}
           <div className="inline-flex items-center gap-3 mb-5 bg-white border-2 border-track-dark px-3 py-1.5 shadow-[2px_2px_0px_#010F1A] transform -skew-x-3">
-            <img src="/lak_athletics_logo.png" alt="LAK Logo" className="w-6 h-6 object-contain" />
+            <img src="/lak_athletics_logo_old.png" alt="LAK Logo" className="w-6 h-6 object-contain" />
             <div className="w-[2px] h-4 bg-track-dark/20" />
             <span className="text-[10px] sm:text-xs font-black text-track-dark uppercase tracking-[0.2em] sm:tracking-[0.3em]">
               LAKSHADWEEP ATHLETICS ASSOCIATION

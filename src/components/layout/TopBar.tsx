@@ -1,4 +1,4 @@
-import { Bell, Search, Menu } from 'lucide-react';
+import { Search, Menu } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
 export default function TopBar() {
@@ -32,25 +32,6 @@ export default function TopBar() {
         </div>
         
         <div className="flex items-center gap-4">
-          <button onClick={() => {
-            const bell = document.getElementById('notification-bell');
-            if (bell) bell.classList.remove('animate-pulse');
-          }} className="relative p-2 bg-white border-4 border-track-dark hover:bg-track-lagoon transition-colors shadow-[4px_4px_0px_#010F1A] active:translate-y-1 active:translate-x-1 active:shadow-none">
-            <Bell className="w-5 h-5 stroke-[3]" />
-            <span id="notification-bell" className="absolute -top-2 -right-2 w-4 h-4 bg-track-coral border-2 border-track-dark rounded-full animate-pulse"></span>
-          </button>
-          
-          <div className="flex items-center gap-3 pl-4 border-l-4 border-track-dark">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-black text-track-dark uppercase">SYSTEM ADMIN</p>
-              <p className="text-xs font-bold text-track-lagoon flex items-center justify-end gap-1 uppercase">
-                <span className="w-2 h-2 bg-track-lagoon rounded-full border border-track-dark animate-pulse"></span> ONLINE
-              </p>
-            </div>
-            <div className="w-10 h-10 bg-track-coral border-4 border-track-dark flex items-center justify-center transform -skew-x-6 shadow-[4px_4px_0px_#010F1A]">
-              <span className="font-black text-white">SA</span>
-            </div>
-          </div>
         </div>
       </div>
     </header>

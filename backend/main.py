@@ -1,13 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
 from . import models
 from .database import engine
 from .routes import athletes, competitions, ws, video, stats, islands, entries, events
 
-# Create database tables
+# Create database tables and uploads directory
 models.Base.metadata.create_all(bind=engine)
+os.makedirs("backend/uploads", exist_ok=True)
 
 app = FastAPI(title="TrackEye Backend API")
+app.mount("/uploads", StaticFiles(directory="backend/uploads"), name="uploads")
+
 
 # Setup CORS for Vite frontend
 app.add_middleware(

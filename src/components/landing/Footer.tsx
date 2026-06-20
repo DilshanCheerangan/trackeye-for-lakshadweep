@@ -8,7 +8,7 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-12 h-12 bg-white border-4 border-white flex items-center justify-center overflow-hidden transform -skew-x-12">
-                <img src="/lak_athletics_logo.png" alt="LAK Athletics Logo" className="w-full h-full object-contain p-0.5" />
+                <img src="/lak_athletics_logo_old.png" alt="LAK Athletics Logo" className="w-full h-full object-contain p-0.5" />
               </div>
               <span className="text-4xl editorial-heading-bebas text-white tracking-widest">
                 TRACKEYE

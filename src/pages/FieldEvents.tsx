@@ -34,7 +34,8 @@ export default function FieldEvents() {
     position: 1,
     mark: "",
     is_pb: false,
-    lane_or_order: 1
+    lane_or_order: 1,
+    new_record: ""
   });
 
   const islandsList = [
@@ -92,7 +93,8 @@ export default function FieldEvents() {
       .then(data => {
         const formatted = data.map((d: any) => ({
           id: d.id, pos: d.position, name: d.athlete_name, island: d.island,
-          best: d.mark, pb: d.is_pb, a1: d.mark, a2: "X", a3: "-", a4: "-", a5: "-", a6: "-", order: d.lane_or_order
+          best: d.mark, pb: d.is_pb, a1: d.mark, a2: "X", a3: "-", a4: "-", a5: "-", a6: "-", order: d.lane_or_order,
+          newRecord: d.new_record
         }));
         setDisplayAttempts(formatted);
         setLoading(false);
@@ -247,7 +249,8 @@ export default function FieldEvents() {
           position: editingResult.position,
           mark: editingResult.mark.trim(),
           is_pb: editingResult.is_pb,
-          lane_or_order: editingResult.lane_or_order
+          lane_or_order: editingResult.lane_or_order,
+          new_record: editingResult.new_record.trim() || null
         })
       });
 
@@ -431,7 +434,7 @@ export default function FieldEvents() {
                     </div>
                     <button 
                       onClick={(e) => handleDeleteEvent(evt.id, e)} 
-                      className={`p-1 bg-white text-track-dark border-2 border-track-dark hover:bg-track-coral hover:text-white transition-colors opacity-0 group-hover:opacity-100`}
+                      className="p-1.5 bg-white text-track-dark border-2 border-track-dark hover:bg-track-coral hover:text-white transition-colors ml-2 shrink-0 z-10"
                     >
                       <Trash className="w-3.5 h-3.5" />
                     </button>
@@ -569,13 +572,18 @@ export default function FieldEvents() {
                             <div className="flex items-center justify-end gap-3">
                               <span className="font-black text-2xl text-track-dark">
                                 {result.best === "-" ? (
-                                  <span className="text-track-dark/30 font-bold uppercase tracking-widest text-xs">PENDING</span>
+                                  <span className="text-track-coral font-bold uppercase tracking-widest text-xs">PENDING</span>
                                 ) : (
                                   result.best
                                 )}
                               </span>
                               {result.pb && result.best !== "-" && (
                                 <span className="bg-track-coral text-white text-xs font-black px-2 py-1 transform -skew-x-6 shadow-[2px_2px_0px_#010F1A]">PB</span>
+                              )}
+                              {result.newRecord && result.best !== "-" && (
+                                <span className="bg-[#FFD700] text-track-dark text-xs font-black px-2 py-0.5 border-2 border-track-dark">
+                                  {result.newRecord}
+                                </span>
                               )}
                             </div>
                           </td>
@@ -591,7 +599,8 @@ export default function FieldEvents() {
                                       position: result.pos === 0 ? sortedAttempts.filter(r => r.best !== "-").length + 1 : result.pos,
                                       mark: result.best === "-" ? "" : result.best,
                                       is_pb: result.pb,
-                                      lane_or_order: result.order
+                                      lane_or_order: result.order,
+                                      new_record: result.newRecord || ""
                                     });
                                     setShowEnterMarkModal(true);
                                   }}
@@ -731,14 +740,14 @@ export default function FieldEvents() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-widest text-track-dark mb-1">Best Mark</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-track-dark mb-1">Distance Result</label>
                   <input 
                     required 
                     autoFocus
                     value={editingResult.mark} 
                     onChange={e => setEditingResult({...editingResult, mark: e.target.value})} 
                     className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold" 
-                    placeholder="e.g. 7.15m" 
+                    placeholder="e.g. 15.24m" 
                   />
                 </div>
 
@@ -751,6 +760,20 @@ export default function FieldEvents() {
                     onChange={e => setEditingResult({...editingResult, position: parseInt(e.target.value) || 1})} 
                     className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold" 
                   />
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-xs font-black uppercase tracking-widest text-track-dark mb-1">Record Type (Optional)</label>
+                  <select 
+                    value={editingResult.new_record} 
+                    onChange={e => setEditingResult({...editingResult, new_record: e.target.value})} 
+                    className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase appearance-none"
+                  >
+                    <option value="">NONE</option>
+                    <option value="MEET RECORD">MEET RECORD</option>
+                    <option value="NATIONAL RECORD">NATIONAL RECORD</option>
+                    <option value="STADIUM RECORD">STADIUM RECORD</option>
+                  </select>
                 </div>
 
                 <div className="col-span-2 flex items-center gap-2 mt-2">
