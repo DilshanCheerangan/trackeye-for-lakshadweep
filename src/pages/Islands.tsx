@@ -18,6 +18,7 @@ export default function Islands() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIsland, setSelectedIsland] = useState<Island | null>(null);
   const [toast, setToast] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [newIsland, setNewIsland] = useState({
     name: '',
     manager: '',
@@ -101,33 +102,31 @@ export default function Islands() {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this island team?")) {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/islands/${id}`, {
-          method: 'DELETE'
-        });
-        if (response.ok) {
-          fetchIslands();
-          setToast("ISLAND TEAM DELETED");
-        } else {
-          setToast("ERROR: FAILED TO DELETE");
-        }
-      } catch (err) {
-        console.error(err);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/islands/${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        fetchIslands();
+        setToast("ISLAND TEAM DELETED");
+      } else {
+        setToast("ERROR: FAILED TO DELETE");
       }
+    } catch (err) {
+      console.error(err);
     }
   };
 
   const LAK_ISLANDS = [
-    "KAVARATTI",
     "AGATTI",
     "AMINI",
     "ANDROTH",
-    "KALPENI",
-    "KADMAT",
-    "KILTAN",
-    "CHETLAT",
     "BITRA",
+    "CHETLAT",
+    "KADMAT",
+    "KALPENI",
+    "KAVARATTI",
+    "KILTAN",
     "MINICOY"
   ];
 
@@ -244,13 +243,33 @@ export default function Islands() {
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
-                    <button 
-                      onClick={() => handleDelete(island.id)}
-                      className="p-1.5 text-track-dark/60 hover:text-track-coral transition-colors hover:bg-track-foam border border-transparent hover:border-track-dark"
-                      title="Delete Team"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {confirmDeleteId === island.id ? (
+                      <div className="flex gap-1 items-center">
+                        <button 
+                          onClick={() => {
+                            handleDelete(island.id);
+                            setConfirmDeleteId(null);
+                          }}
+                          className="px-2 py-0.5 bg-track-coral text-white border-2 border-track-dark font-black text-[9px] uppercase cursor-pointer"
+                        >
+                          YES
+                        </button>
+                        <button 
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="px-2 py-0.5 bg-white text-track-dark border-2 border-track-dark font-black text-[9px] uppercase cursor-pointer"
+                        >
+                          NO
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => setConfirmDeleteId(island.id)}
+                        className="p-1.5 text-track-dark/60 hover:text-track-coral transition-colors hover:bg-track-foam border border-transparent hover:border-track-dark cursor-pointer"
+                        title="Delete Team"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -292,11 +311,11 @@ export default function Islands() {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Team Manager</label>
-                  <input required value={newIsland.manager} onChange={e => setNewIsland({...newIsland, manager: e.target.value.toUpperCase()})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="MANAGER NAME" />
+                  <input required value={newIsland.manager} onChange={e => setNewIsland({...newIsland, manager: e.target.value.toUpperCase()})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="ENTER TEAM MANAGER NAME" />
                 </div>
                 <div>
                   <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Head Coach</label>
-                  <input required value={newIsland.coach} onChange={e => setNewIsland({...newIsland, coach: e.target.value.toUpperCase()})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="COACH NAME" />
+                  <input required value={newIsland.coach} onChange={e => setNewIsland({...newIsland, coach: e.target.value.toUpperCase()})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="ENTER HEAD COACH NAME" />
                 </div>
               </div>
 

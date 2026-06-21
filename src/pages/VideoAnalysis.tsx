@@ -613,7 +613,7 @@ export default function VideoAnalysis() {
                     <div className="flex items-center gap-6">
                       <div>
                         <span className="text-[10px] font-black text-track-lagoon uppercase tracking-widest block">CURSOR TIME</span>
-                        <span className="font-editorial-bebas text-4xl leading-none text-track-coral">
+                        <span className="font-bebas text-4xl leading-none text-track-coral">
                           {hoverTime > 0 ? `${hoverTime.toFixed(3)}s` : "ALIGN CURSOR"}
                         </span>
                       </div>

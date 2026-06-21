@@ -14,6 +14,7 @@ export default function Dashboard() {
   });
 
   const [competitions, setCompetitions] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/stats/`)
@@ -28,15 +29,23 @@ export default function Dashboard() {
     fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/competitions/`)
       .then(res => res.json())
       .then(data => {
-        setCompetitions(data);
+        setCompetitions(data || []);
       })
       .catch(err => {
         console.error("Failed to fetch competitions:", err);
       });
+
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/events/`)
+      .then(res => res.json())
+      .then(data => {
+        setEvents(data || []);
+      })
+      .catch(err => {
+        console.error("Failed to fetch events:", err);
+      });
   }, []);
 
   const displayStats = stats;
-  const displayCompetitions = competitions;
 
   const metrics = [
     { title: "Total Athletes", value: displayStats.total_athletes, icon: <Users />, trend: displayStats.total_athletes > 0 ? `+${displayStats.total_athletes}` : "0", trendUp: true },
@@ -67,28 +76,84 @@ export default function Dashboard() {
       </div>
 
 
-      <div className="w-full">
-        <div className="brutal-card p-0 flex flex-col h-[500px]">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 w-full">
+        {/* Track Events Column */}
+        <div className="brutal-card p-0 flex flex-col h-[500px] bg-white">
           <div className="flex justify-between items-center p-6 border-b-8 border-track-dark bg-track-lagoon">
-            <h3 className="text-3xl editorial-heading-bebas text-track-dark">LIVE EVENTS FEED</h3>
-            <span className="text-lg font-black text-white bg-track-coral px-3 py-1 border-2 border-track-dark transform -skew-x-12 shadow-[2px_2px_0px_#010F1A]">ON AIR</span>
+            <h3 className="text-3xl editorial-heading-bebas text-track-dark">LIVE TRACK EVENTS</h3>
+            <span className="text-lg font-black text-white bg-track-coral px-3 py-1 border-2 border-track-dark transform -skew-x-12 shadow-[2px_2px_0px_#010F1A]">LIVE FEED</span>
           </div>
           
           <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white">
-            {displayCompetitions.length === 0 ? (
-              <div className="text-center font-bold text-track-dark/40 py-8 uppercase tracking-wider">NO EVENTS FOUND IN DATABASE</div>
-            ) : displayCompetitions.map((feed, i) => (
-              <div key={i} className="bg-track-foam p-4 border-4 border-track-dark hover:-translate-y-1 hover:shadow-[4px_4px_0px_#010F1A] transition-all cursor-pointer">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-black text-track-dark uppercase text-lg">{feed.name}</h4>
-                  <span className="text-sm font-bold text-track-dark/60 bg-white px-2 py-0.5 border-2 border-track-dark uppercase">{feed.status}</span>
+            {events.filter(e => e.event_type === 'TRACK').length === 0 ? (
+              <div className="text-center font-bold text-track-dark/40 py-8 uppercase tracking-wider">NO TRACK EVENTS FOUND</div>
+            ) : events.filter(e => e.event_type === 'TRACK').map((evt, i) => {
+              const comp = competitions.find(c => c.id === evt.competition_id);
+              return (
+                <div key={i} className="bg-track-foam p-4 border-4 border-track-dark hover:-translate-y-1 hover:shadow-[4px_4px_0px_#010F1A] transition-all cursor-default">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-black text-track-dark uppercase text-lg">{evt.name}</h4>
+                    <span className={`text-sm font-bold bg-white px-2 py-0.5 border-2 border-track-dark uppercase ${
+                      evt.status === 'LIVE' ? 'text-track-coral border-track-coral' :
+                      evt.status === 'OFFICIAL' ? 'text-[#21A366] border-[#21A366]' :
+                      'text-track-dark/60 border-track-dark/60'
+                    }`}>
+                      {evt.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 border-2 border-track-dark ${
+                      evt.status === 'LIVE' ? 'bg-track-coral animate-pulse' :
+                      evt.status === 'OFFICIAL' ? 'bg-[#21A366]' :
+                      'bg-track-lagoon'
+                    }`}></div>
+                    <span className="text-sm font-black text-track-dark/80">
+                      {comp ? `${comp.name} • ${comp.location} • ${comp.date_str}` : 'TRACK EVENT'}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 ${feed.status === 'LIVE' ? 'bg-track-coral animate-pulse' : 'bg-track-lagoon'} border-2 border-track-dark`}></div>
-                  <span className="text-sm font-black text-track-dark/80">{feed.location} • {feed.date_str}</span>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Field Events Column */}
+        <div className="brutal-card p-0 flex flex-col h-[500px] bg-white">
+          <div className="flex justify-between items-center p-6 border-b-8 border-track-dark bg-track-coral">
+            <h3 className="text-3xl editorial-heading-bebas text-white">LIVE FIELD EVENTS</h3>
+            <span className="text-lg font-black text-track-dark bg-white px-3 py-1 border-2 border-track-dark transform -skew-x-12 shadow-[2px_2px_0px_#010F1A]">LIVE FEED</span>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white">
+            {events.filter(e => e.event_type === 'FIELD').length === 0 ? (
+              <div className="text-center font-bold text-track-dark/40 py-8 uppercase tracking-wider">NO FIELD EVENTS FOUND</div>
+            ) : events.filter(e => e.event_type === 'FIELD').map((evt, i) => {
+              const comp = competitions.find(c => c.id === evt.competition_id);
+              return (
+                <div key={i} className="bg-track-foam p-4 border-4 border-track-dark hover:-translate-y-1 hover:shadow-[4px_4px_0px_#010F1A] transition-all cursor-default">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-black text-track-dark uppercase text-lg">{evt.name}</h4>
+                    <span className={`text-sm font-bold bg-white px-2 py-0.5 border-2 border-track-dark uppercase ${
+                      evt.status === 'LIVE' ? 'text-track-coral border-track-coral' :
+                      evt.status === 'OFFICIAL' ? 'text-[#21A366] border-[#21A366]' :
+                      'text-track-dark/60 border-track-dark/60'
+                    }`}>
+                      {evt.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 border-2 border-track-dark ${
+                      evt.status === 'LIVE' ? 'bg-track-coral animate-pulse' :
+                      evt.status === 'OFFICIAL' ? 'bg-[#21A366]' :
+                      'bg-track-lagoon'
+                    }`}></div>
+                    <span className="text-sm font-black text-track-dark/80">
+                      {comp ? `${comp.name} • ${comp.location} • ${comp.date_str}` : 'FIELD EVENT'}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

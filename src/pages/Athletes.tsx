@@ -17,6 +17,7 @@ export default function Athletes() {
   const [selectedAthlete, setSelectedAthlete] = useState<Athlete | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   useEffect(() => {
     if (toast) {
@@ -43,19 +44,17 @@ export default function Athletes() {
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this athlete?")) {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/athletes/${id}`, {
-          method: 'DELETE'
-        });
-        if (response.ok) {
-          fetchAthletes();
-        } else {
-          setToast("ERROR: FAILED TO DELETE");
-        }
-      } catch (err) {
-        console.error(err);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/athletes/${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        fetchAthletes();
+      } else {
+        setToast("ERROR: FAILED TO DELETE");
       }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -136,7 +135,7 @@ export default function Athletes() {
                   <td className="p-4 border-r-4 border-track-dark font-bold text-track-dark/60">{athlete.athlete_id}</td>
                   <td className="p-4 border-r-4 border-track-dark font-black text-lg text-track-dark">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-track-dark text-white flex items-center justify-center font-editorial-bebas text-xl pt-1 transform -skew-x-6">
+                      <div className="w-8 h-8 bg-track-dark text-white flex items-center justify-center font-bebas text-xl pt-1 transform -skew-x-6">
                         {athlete.name.charAt(0)}
                       </div>
                       {athlete.name}
@@ -166,14 +165,38 @@ export default function Athletes() {
                       {athlete.status}
                     </span>
                   </td>
-                  <td className="p-4 text-center">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); handleDelete(athlete.id); }} 
-                      className="p-2 text-track-dark/40 hover:text-track-coral transition-colors hover:bg-track-foam border border-transparent hover:border-track-dark rounded"
-                      title="Delete Athlete"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                   <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
+                    {confirmDeleteId === athlete.id ? (
+                      <div className="flex gap-1 justify-center">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(athlete.id);
+                            setConfirmDeleteId(null);
+                          }}
+                          className="px-2 py-0.5 bg-track-coral text-white border-2 border-track-dark font-black text-[9px] uppercase shadow-[1px_1px_0px_#010F1A] cursor-pointer"
+                        >
+                          YES
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDeleteId(null);
+                          }}
+                          className="px-2 py-0.5 bg-white text-track-dark border-2 border-track-dark font-black text-[9px] uppercase shadow-[1px_1px_0px_#010F1A] cursor-pointer"
+                        >
+                          NO
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(athlete.id); }} 
+                        className="p-2 text-track-dark/40 hover:text-track-coral transition-colors hover:bg-track-foam border border-transparent hover:border-track-dark rounded cursor-pointer"
+                        title="Delete Athlete"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -190,7 +213,7 @@ export default function Athletes() {
           <div className="bg-white border-8 border-track-dark shadow-[12px_12px_0px_#00C8C8] w-full max-w-5xl my-8">
             <div className="p-6 border-b-8 border-track-dark bg-track-foam flex justify-between items-center sticky top-0 z-10">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-track-dark text-white flex items-center justify-center font-editorial-bebas text-4xl pt-2 transform -skew-x-6">
+                <div className="w-16 h-16 bg-track-dark text-white flex items-center justify-center font-bebas text-4xl pt-2 transform -skew-x-6">
                   {selectedAthlete.name.charAt(0)}
                 </div>
                 <div>

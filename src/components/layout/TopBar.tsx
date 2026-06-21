@@ -1,7 +1,7 @@
 import { Search, Menu } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
-export default function TopBar() {
+export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
   const location = useLocation();
   const getTitle = () => {
     const path = location.pathname.split('/').pop();
@@ -12,7 +12,10 @@ export default function TopBar() {
   return (
     <header className="h-20 bg-track-foam border-b-8 border-track-dark sticky top-0 z-10 px-6 flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <button className="md:hidden p-2 bg-white border-4 border-track-dark hover:bg-track-lagoon transition-colors shadow-[4px_4px_0px_#010F1A]">
+        <button 
+          onClick={onMenuClick}
+          className="md:hidden p-2 bg-white border-4 border-track-dark hover:bg-track-lagoon transition-colors shadow-[4px_4px_0px_#010F1A] cursor-pointer"
+        >
           <Menu className="w-6 h-6 stroke-[3]" />
         </button>
         <div className="hidden md:flex flex-col">

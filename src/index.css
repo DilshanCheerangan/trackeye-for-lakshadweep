@@ -32,7 +32,8 @@
   }
   
   .editorial-heading-bebas {
-    @apply font-bebas uppercase tracking-normal;
+    @apply font-bebas uppercase tracking-normal pt-3 pb-1;
+    line-height: 1.25 !important;
   }
 
   .brutal-card {

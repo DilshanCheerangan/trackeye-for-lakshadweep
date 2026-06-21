@@ -8,12 +8,18 @@ export default function TrackEvents() {
   const enteredCompetitionName = sessionStorage.getItem('enteredCompetitionName');
 
   const [events, setEvents] = useState<any[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(() => {
+    const stored = sessionStorage.getItem('selectedEventId');
+    return stored ? parseInt(stored) : null;
+  });
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [toast, setToast] = useState("");
+  const [confirmDeleteEventId, setConfirmDeleteEventId] = useState<number | null>(null);
+  const [confirmDeleteResultId, setConfirmDeleteResultId] = useState<number | null>(null);
+  const [confirmResetEvent, setConfirmResetEvent] = useState(false);
 
   // Modals
   const [showAddEventModal, setShowAddEventModal] = useState(false);
@@ -22,7 +28,7 @@ export default function TrackEvents() {
   const [showAddParticipantModal, setShowAddParticipantModal] = useState(false);
   const [newParticipant, setNewParticipant] = useState({
     athlete_name: "",
-    island: "KAVARATTI",
+    island: "",
     lane_or_order: 1
   });
 
@@ -40,11 +46,19 @@ export default function TrackEvents() {
   });
 
   const islandsList = [
-    "KAVARATTI", "AGATTI", "AMINI", "ANDROTH", "KALPENI",
-    "KADMAT", "KILTAN", "CHETLAT", "BITRA", "MINICOY"
+    "AGATTI", "AMINI", "ANDROTH", "BITRA", "CHETLAT",
+    "KADMAT", "KALPENI", "KAVARATTI", "KILTAN", "MINICOY"
   ];
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+
+  useEffect(() => {
+    if (selectedEventId) {
+      sessionStorage.setItem('selectedEventId', selectedEventId.toString());
+    } else {
+      sessionStorage.removeItem('selectedEventId');
+    }
+  }, [selectedEventId]);
 
   useEffect(() => {
     if (toast) {
@@ -130,20 +144,29 @@ export default function TrackEvents() {
         return;
       }
 
+      const createdEvent = await response.json();
+
       setNewEventName("");
       setShowAddEventModal(false);
-      setToast("EVENT CREATED SUCCESSFULLY");
-      fetchEvents();
+      
+      if (createdEvent.event_type !== 'TRACK') {
+        sessionStorage.setItem('selectedEventId', createdEvent.id.toString());
+        setToast("EVENT DETECTED & SAVED AS FIELD EVENT. REDIRECTING...");
+        setTimeout(() => {
+          navigate('/dashboard/field-events');
+        }, 1500);
+      } else {
+        setSelectedEventId(createdEvent.id);
+        setToast("EVENT CREATED SUCCESSFULLY");
+        fetchEvents();
+      }
     } catch (err) {
       console.error(err);
       setToast("ERROR CREATING EVENT");
     }
   };
 
-  const handleDeleteEvent = async (eventId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!window.confirm("Are you sure you want to delete this event and all its results?")) return;
-
+  const handleDeleteEvent = async (eventId: number) => {
     try {
       const response = await fetch(`${API_URL}/events/${eventId}`, {
         method: 'DELETE'
@@ -227,9 +250,10 @@ export default function TrackEvents() {
 
       setShowAddParticipantModal(false);
       setNewParticipant({
-        athlete_name: "", island: "KAVARATTI", lane_or_order: results.length + 2
+        athlete_name: "", island: "", lane_or_order: results.length + 2
       });
       setToast("ATHLETE REGISTERED & ADDED TO EVENT");
+      fetchEvents();
       fetchResults();
     } catch (err) {
       console.error(err);
@@ -272,7 +296,7 @@ export default function TrackEvents() {
   };
 
   const handleDeleteResult = async (resultId: number) => {
-    if (!selectedEventId || !window.confirm("Remove this athlete from the event participant list?")) return;
+    if (!selectedEventId) return;
 
     try {
       const response = await fetch(`${API_URL}/events/${selectedEventId}/results/${resultId}`, {
@@ -292,7 +316,7 @@ export default function TrackEvents() {
   };
 
   const handleClearResults = async () => {
-    if (!selectedEventId || !window.confirm("Clear all registered athletes and results for this event?")) return;
+    if (!selectedEventId) return;
 
     try {
       const response = await fetch(`${API_URL}/events/${selectedEventId}/results`, {
@@ -341,6 +365,33 @@ export default function TrackEvents() {
   const podiumGold = sortedResults.find(r => r.pos === 1 && r.time !== "-");
   const podiumSilver = sortedResults.find(r => r.pos === 2 && r.time !== "-");
   const podiumBronze = sortedResults.find(r => r.pos === 3 && r.time !== "-");
+
+  const getStatusBadge = (status: string, isSelected: boolean) => {
+    switch (status) {
+      case 'LIVE':
+        return (
+          <span className="flex items-center gap-1.5 text-[9px] font-black text-track-coral animate-pulse">
+            <span className="w-1.5 h-1.5 rounded-full bg-track-coral animate-pulse"></span>
+            LIVE
+          </span>
+        );
+      case 'OFFICIAL':
+        return (
+          <span className={`flex items-center gap-1.5 text-[9px] font-black ${isSelected ? 'text-emerald-400' : 'text-emerald-600'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-400' : 'bg-emerald-600'}`}></span>
+            OFFICIAL
+          </span>
+        );
+      case 'PENDING':
+      default:
+        return (
+          <span className={`flex items-center gap-1.5 text-[9px] font-black ${isSelected ? 'text-amber-300' : 'text-amber-600'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-300' : 'bg-amber-600'}`}></span>
+            PENDING
+          </span>
+        );
+    }
+  };
 
   // If no competition has been entered
   if (!enteredCompetitionId) {
@@ -430,15 +481,42 @@ export default function TrackEvents() {
                     }`}
                   >
                     <div className="flex flex-col gap-0.5">
-                      <span className="font-editorial-bebas text-lg leading-none tracking-wide">{evt.name}</span>
-                      <span className={`text-[9px] font-black ${selectedEventId === evt.id ? 'text-track-coral' : 'text-track-dark/50'}`}>{evt.status}</span>
+                      <span className="font-bebas text-lg leading-none tracking-wide">{evt.name}</span>
+                      {getStatusBadge(evt.status, selectedEventId === evt.id)}
                     </div>
-                    <button 
-                      onClick={(e) => handleDeleteEvent(evt.id, e)} 
-                      className={`p-1 bg-white text-track-dark border-2 border-track-dark hover:bg-track-coral hover:text-white transition-colors`}
-                    >
-                      <Trash className="w-3.5 h-3.5" />
-                    </button>
+                    {confirmDeleteEventId === evt.id ? (
+                      <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteEvent(evt.id);
+                            setConfirmDeleteEventId(null);
+                          }}
+                          className="px-1.5 py-0.5 bg-track-coral text-white border-2 border-track-dark font-black text-[9px] uppercase shadow-[1px_1px_0px_#010F1A] cursor-pointer"
+                        >
+                          YES
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDeleteEventId(null);
+                          }}
+                          className="px-1.5 py-0.5 bg-white text-track-dark border-2 border-track-dark font-black text-[9px] uppercase shadow-[1px_1px_0px_#010F1A] cursor-pointer"
+                        >
+                          NO
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDeleteEventId(evt.id);
+                        }} 
+                        className="p-1 bg-white text-track-dark border-2 border-track-dark hover:bg-track-coral hover:text-white transition-colors cursor-pointer"
+                      >
+                        <Trash className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -463,23 +541,55 @@ export default function TrackEvents() {
                     <span className="font-black text-lg">{selectedEvent.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`w-3 h-3 rounded-full ${selectedEvent.status === 'PENDING' ? 'bg-[#FFD700] animate-pulse' : 'bg-[#21A366]'}`}></span>
-                    <span className={`font-black uppercase tracking-widest text-sm ${selectedEvent.status === 'PENDING' ? 'text-track-coral' : 'text-[#21A366]'}`}>
-                      {selectedEvent.status === 'PENDING' ? 'UNDER REVIEW / LIVE' : 'OFFICIAL'}
-                    </span>
+                    {selectedEvent.status === 'LIVE' ? (
+                      <>
+                        <span className="w-3 h-3 rounded-full bg-track-coral animate-pulse"></span>
+                        <span className="font-black uppercase tracking-widest text-sm text-track-coral">LIVE</span>
+                      </>
+                    ) : selectedEvent.status === 'OFFICIAL' ? (
+                      <>
+                        <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
+                        <span className="font-black uppercase tracking-widest text-sm text-emerald-600">OFFICIAL</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-3 h-3 rounded-full bg-amber-500"></span>
+                        <span className="font-black uppercase tracking-widest text-sm text-amber-500">PENDING</span>
+                      </>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex gap-2 w-full sm:w-auto">
-                  {selectedEvent.status === 'PENDING' && (
+                  {selectedEvent.status !== 'OFFICIAL' && (
                     <>
-                      <button 
-                        onClick={handleClearResults} 
-                        disabled={results.length === 0}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white text-track-dark px-4 py-2 border-4 border-track-dark hover:bg-track-coral hover:text-white transition-all font-black uppercase text-xs disabled:opacity-40"
-                      >
-                        RESET EVENT
-                      </button>
+                      {confirmResetEvent ? (
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => {
+                              handleClearResults();
+                              setConfirmResetEvent(false);
+                            }}
+                            className="bg-track-coral text-white px-4 py-2 border-4 border-track-dark font-black uppercase text-xs cursor-pointer"
+                          >
+                            CONFIRM RESET
+                          </button>
+                          <button 
+                            onClick={() => setConfirmResetEvent(false)}
+                            className="bg-white text-track-dark px-4 py-2 border-4 border-track-dark font-black uppercase text-xs cursor-pointer"
+                          >
+                            CANCEL
+                          </button>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => setConfirmResetEvent(true)} 
+                          disabled={results.length === 0}
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white text-track-dark px-4 py-2 border-4 border-track-dark hover:bg-track-coral hover:text-white transition-all font-black uppercase text-xs disabled:opacity-40 cursor-pointer"
+                        >
+                          RESET EVENT
+                        </button>
+                      )}
                       <button 
                         onClick={handleApprove} 
                         disabled={results.length === 0 || results.some(r => r.time === "-")}
@@ -561,7 +671,7 @@ export default function TrackEvents() {
                         <th className="p-4 border-r-4 border-track-dark/20 text-right">REACTION</th>
                         <th className="p-4 border-r-4 border-track-dark/20 text-right">RECORD</th>
                         <th className="p-4 border-r-4 border-track-dark/20 text-right">TIME</th>
-                        {selectedEvent.status === 'PENDING' && (
+                        {selectedEvent.status !== 'OFFICIAL' && (
                           <th className="p-4 text-center w-36">ACTIONS</th>
                         )}
                       </tr>
@@ -569,11 +679,11 @@ export default function TrackEvents() {
                     <tbody>
                       {loading ? (
                         <tr>
-                          <td colSpan={selectedEvent.status === 'PENDING' ? 8 : 7} className="p-8 text-center font-bold text-track-dark/40 uppercase">Loading Schedule...</td>
+                          <td colSpan={selectedEvent.status !== 'OFFICIAL' ? 8 : 7} className="p-8 text-center font-bold text-track-dark/40 uppercase">Loading Schedule...</td>
                         </tr>
                       ) : sortedResults.length === 0 ? (
                         <tr>
-                          <td colSpan={selectedEvent.status === 'PENDING' ? 8 : 7} className="p-8 text-center font-bold text-track-dark/40 uppercase">No Participating Athletes Registered. Click "ADD ATHLETE" to build the start list.</td>
+                          <td colSpan={selectedEvent.status !== 'OFFICIAL' ? 8 : 7} className="p-8 text-center font-bold text-track-dark/40 uppercase">No Participating Athletes Registered. Click "ADD ATHLETE" to build the start list.</td>
                         </tr>
                       ) : sortedResults.map((result, i) => (
                         <tr key={i} className={`border-b-4 border-track-dark/10 hover:bg-track-foam transition-colors ${result.time === "-" ? 'bg-white/60' : result.pos <= 3 && result.pos > 0 ? 'bg-white' : 'bg-track-foam/50'}`}>
@@ -606,7 +716,7 @@ export default function TrackEvents() {
                               result.time
                             )}
                           </td>
-                          {selectedEvent.status === 'PENDING' && (
+                          {selectedEvent.status !== 'OFFICIAL' && (
                             <td className="p-4 text-center">
                               <div className="flex justify-center gap-2">
                                 <button 
@@ -628,13 +738,33 @@ export default function TrackEvents() {
                                 >
                                   <Edit3 className="w-3 h-3" /> ENTER TIME
                                 </button>
-                                <button 
-                                  onClick={() => handleDeleteResult(result.id)}
-                                  className="p-1 bg-white border-2 border-track-dark text-track-dark hover:bg-track-coral hover:text-white transition-colors"
-                                  title="Remove Participant"
-                                >
-                                  <Trash className="w-3.5 h-3.5" />
-                                </button>
+                                {confirmDeleteResultId === result.id ? (
+                                  <div className="flex gap-1 items-center">
+                                    <button 
+                                      onClick={() => {
+                                        handleDeleteResult(result.id);
+                                        setConfirmDeleteResultId(null);
+                                      }}
+                                      className="px-2 py-0.5 bg-track-coral text-white border-2 border-track-dark font-black text-[9px] uppercase cursor-pointer"
+                                    >
+                                      CONFIRM
+                                    </button>
+                                    <button 
+                                      onClick={() => setConfirmDeleteResultId(null)}
+                                      className="px-2 py-0.5 bg-white text-track-dark border-2 border-track-dark font-black text-[9px] uppercase cursor-pointer"
+                                    >
+                                      CANCEL
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button 
+                                    onClick={() => setConfirmDeleteResultId(result.id)}
+                                    className="p-1 bg-white border-2 border-track-dark text-track-dark hover:bg-track-coral hover:text-white transition-colors cursor-pointer"
+                                    title="Remove Participant"
+                                  >
+                                    <Trash className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </div>
                             </td>
                           )}
@@ -660,7 +790,7 @@ export default function TrackEvents() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-track-dark/85 backdrop-blur-xs">
           <div className="bg-white border-8 border-track-dark shadow-[12px_12px_0px_#FF7A45] w-full max-w-lg">
             <div className="p-4 border-b-8 border-track-dark bg-track-foam flex justify-between items-center">
-              <h2 className="text-3xl editorial-heading-bebas text-track-dark">ADD TRACK EVENT</h2>
+              <h2 className="text-3xl editorial-heading-bebas text-track-dark">ADD EVENT</h2>
               <button onClick={() => setShowAddEventModal(false)} className="font-black text-track-dark text-xl hover:text-track-coral cursor-pointer">X</button>
             </div>
             <form onSubmit={handleCreateEvent} className="p-6 space-y-6">
@@ -671,7 +801,7 @@ export default function TrackEvents() {
                   value={newEventName} 
                   onChange={e => setNewEventName(e.target.value)} 
                   className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" 
-                  placeholder="e.g. MEN'S 200M - HEAT 2" 
+                  placeholder="ENTER EVENT NAME (E.G. 100M HEAT 1)" 
                 />
               </div>
               <div className="flex justify-end pt-4 border-t-4 border-track-dark">
@@ -700,17 +830,19 @@ export default function TrackEvents() {
                   value={newParticipant.athlete_name} 
                   onChange={e => setNewParticipant({...newParticipant, athlete_name: e.target.value})} 
                   className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase" 
-                  placeholder="e.g. HIBA RAFI" 
+                  placeholder="ENTER ATHLETE FULL NAME" 
                 />
               </div>
               
               <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-track-dark mb-1">Island Team</label>
                 <select 
+                  required
                   value={newParticipant.island} 
                   onChange={e => setNewParticipant({...newParticipant, island: e.target.value})} 
-                  className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase appearance-none"
+                  className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase appearance-none cursor-pointer"
                 >
+                  <option value="" disabled>SELECT</option>
                   {islandsList.map(isl => (
                     <option key={isl} value={isl}>{isl}</option>
                   ))}
@@ -767,7 +899,7 @@ export default function TrackEvents() {
                     value={editingResult.mark} 
                     onChange={e => setEditingResult({...editingResult, mark: e.target.value})} 
                     className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold" 
-                    placeholder="e.g. 10.45s" 
+                    placeholder="ENTER TIME RESULT (E.G. 10.45)" 
                   />
                 </div>
 
@@ -788,7 +920,7 @@ export default function TrackEvents() {
                     value={editingResult.reaction} 
                     onChange={e => setEditingResult({...editingResult, reaction: e.target.value})} 
                     className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold" 
-                    placeholder="e.g. 0.145s" 
+                    placeholder="ENTER REACTION TIME (E.G. 0.150)" 
                   />
                 </div>
 

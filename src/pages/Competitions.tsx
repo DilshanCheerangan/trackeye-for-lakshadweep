@@ -20,6 +20,7 @@ export default function Competitions() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [newMeet, setNewMeet] = useState({
     name: '',
     date_str: '',
@@ -56,19 +57,26 @@ export default function Competitions() {
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this competition?")) {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/competitions/${id}`, {
-          method: 'DELETE'
-        });
-        if (!response.ok) {
-          setToast("ERROR: FAILED TO DELETE");
-          return;
-        }
-        fetchCompetitions();
-      } catch (err) {
-        console.error(err);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001/api'}/competitions/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) {
+        setToast("ERROR: FAILED TO DELETE");
+        return;
       }
+      
+      // Clear active session storage if the deleted meet was the entered one
+      const activeMeetId = sessionStorage.getItem('enteredCompetitionId');
+      if (activeMeetId && parseInt(activeMeetId) === id) {
+        sessionStorage.removeItem('enteredCompetitionId');
+        sessionStorage.removeItem('enteredCompetitionName');
+        sessionStorage.removeItem('selectedEventId');
+      }
+      
+      fetchCompetitions();
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -136,11 +144,11 @@ export default function Competitions() {
               <h2 className="text-2xl font-black text-track-dark/40 uppercase tracking-widest">NO COMPETITIONS FOUND.</h2>
             </div>
           ) : displayCompetitions.map((comp, i) => (
-            <div key={i} onClick={() => handleEnterMeet(comp.id, comp.name)} className="brutal-card p-0 flex flex-col md:flex-row overflow-hidden group hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all cursor-pointer">
+            <div key={i} className="brutal-card p-0 flex flex-col md:flex-row overflow-hidden group hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all cursor-pointer">
               {/* Left Color Bar */}
-              <div className={`w-full md:w-6 ${comp.color} shrink-0`}></div>
+              <div onClick={() => handleEnterMeet(comp.id, comp.name)} className={`w-full md:w-6 ${comp.color} shrink-0`}></div>
               
-              <div className="p-6 flex-1 bg-white">
+              <div onClick={() => handleEnterMeet(comp.id, comp.name)} className="p-6 flex-1 bg-white">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
@@ -185,19 +193,38 @@ export default function Competitions() {
 
               {/* Action Button Area */}
               <div className="w-full md:w-32 bg-track-foam border-t-4 md:border-t-0 md:border-l-4 border-track-dark flex flex-row md:flex-col items-center justify-center gap-3 p-4">
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(comp.id);
-                  }}
-                  className="w-12 h-12 bg-white border-4 border-track-dark flex items-center justify-center hover:bg-track-coral hover:text-white transition-colors"
-                  title="Delete Competition"
-                >
-                  <Trash className="w-5 h-5" />
-                </button>
-                <button onClick={(e) => { e.stopPropagation(); handleEnterMeet(comp.id, comp.name); }} className="w-12 h-12 bg-white border-4 border-track-dark flex items-center justify-center transform -skew-x-6 hover:bg-track-lagoon transition-colors">
-                  <ArrowRight className="w-6 h-6 stroke-[3]" />
-                </button>
+                {confirmDeleteId === comp.id ? (
+                  <div className="flex flex-col gap-2 w-full shrink-0">
+                    <button 
+                      onClick={() => {
+                        handleDelete(comp.id);
+                        setConfirmDeleteId(null);
+                      }}
+                      className="w-full py-1 bg-track-coral text-white border-4 border-track-dark font-black text-[10px] uppercase shadow-[2px_2px_0px_#010F1A] hover:shadow-none hover:translate-y-0.5 transition-all text-center cursor-pointer"
+                    >
+                      CONFIRM
+                    </button>
+                    <button 
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="w-full py-1 bg-white text-track-dark border-4 border-track-dark font-black text-[10px] uppercase shadow-[2px_2px_0px_#010F1A] hover:shadow-none hover:translate-y-0.5 transition-all text-center cursor-pointer"
+                    >
+                      CANCEL
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <button 
+                      onClick={() => setConfirmDeleteId(comp.id)}
+                      className="w-12 h-12 bg-white border-4 border-track-dark flex items-center justify-center hover:bg-track-coral hover:text-white transition-colors cursor-pointer"
+                      title="Delete Competition"
+                    >
+                      <Trash className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => handleEnterMeet(comp.id, comp.name)} className="w-12 h-12 bg-white border-4 border-track-dark flex items-center justify-center transform -skew-x-6 hover:bg-track-lagoon transition-colors cursor-pointer">
+                      <ArrowRight className="w-6 h-6 stroke-[3]" />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -243,18 +270,18 @@ export default function Competitions() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="col-span-2">
                   <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Meet Name</label>
-                  <input required value={newMeet.name} onChange={e => setNewMeet({...newMeet, name: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="NATIONAL CHAMPIONSHIPS" />
+                  <input required value={newMeet.name} onChange={e => setNewMeet({...newMeet, name: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="ENTER MEET NAME" />
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Date String</label>
-                  <input required value={newMeet.date_str} onChange={e => setNewMeet({...newMeet, date_str: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="SEP 10 - SEP 15, 2026" />
+                  <input required value={newMeet.date_str} onChange={e => setNewMeet({...newMeet, date_str: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="ENTER DATES (E.G. OCT 10 - OCT 12, 2026)" />
                 </div>
                 <div>
                   <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Location</label>
-                  <input required value={newMeet.location} onChange={e => setNewMeet({...newMeet, location: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="MAIN STADIUM" />
+                  <input required value={newMeet.location} onChange={e => setNewMeet({...newMeet, location: e.target.value})} className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" placeholder="ENTER LOCATION" />
                 </div>
               </div>
 

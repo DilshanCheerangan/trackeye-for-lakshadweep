@@ -44,6 +44,15 @@ def delete_competition(id: int, db: Session = Depends(get_db)):
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Competition not found")
         
+    # Delete associated results first
+    event_ids = [e.id for e in db.query(models.TrackEvent).filter(models.TrackEvent.competition_id == id).all()]
+    if event_ids:
+        db.query(models.Result).filter(models.Result.event_id.in_(event_ids)).delete(synchronize_session=False)
+        
+    # Delete associated events
+    db.query(models.TrackEvent).filter(models.TrackEvent.competition_id == id).delete(synchronize_session=False)
+    
+    # Delete competition
     db.delete(db_comp)
     db.commit()
-    return {"message": "Competition deleted successfully"}
+    return {"message": "Competition and all associated events/results deleted successfully"}

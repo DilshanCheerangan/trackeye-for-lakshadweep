@@ -53,7 +53,38 @@ export default function Reports() {
     fetch(`${API_URL}/events/${selectedEventId}/results`)
       .then(res => res.json())
       .then(data => {
-        const sorted = (data || []).sort((a: any, b: any) => a.position - b.position);
+        const formatted = (data || []).map((r: any) => {
+          let displayMark = r.mark;
+          if (r.mark && r.mark.includes(',')) {
+            const parts = r.mark.split(',');
+            const getNumeric = (val: string) => {
+              if (!val || val === "-" || val === "X") return 0;
+              const num = parseFloat(val.replace(/[^0-9.]/g, ''));
+              return isNaN(num) ? 0 : num;
+            };
+            const v1 = getNumeric(parts[0]);
+            const v2 = getNumeric(parts[1]);
+            const v3 = getNumeric(parts[2]);
+            let maxVal = 0;
+            let bestStr = "-";
+            if (v1 > maxVal) { maxVal = v1; bestStr = parts[0]; }
+            if (v2 > maxVal) { maxVal = v2; bestStr = parts[1]; }
+            if (v3 > maxVal) { maxVal = v3; bestStr = parts[2]; }
+            if (bestStr === "-" && (parts[0] === "X" || parts[1] === "X" || parts[2] === "X")) {
+              bestStr = "X";
+            }
+            displayMark = bestStr;
+          }
+          return { ...r, mark: displayMark };
+        });
+        const sorted = formatted.sort((a: any, b: any) => {
+          if (a.position === 0 && b.position !== 0) return 1;
+          if (a.position !== 0 && b.position === 0) return -1;
+          if (a.position === 0 && b.position === 0) {
+            return (a.lane_or_order || 999) - (b.lane_or_order || 999);
+          }
+          return a.position - b.position;
+        });
         setResults(sorted);
         setLoading(false);
       })

@@ -8,12 +8,18 @@ export default function FieldEvents() {
   const enteredCompetitionName = sessionStorage.getItem('enteredCompetitionName');
 
   const [events, setEvents] = useState<any[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(() => {
+    const stored = sessionStorage.getItem('selectedEventId');
+    return stored ? parseInt(stored) : null;
+  });
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [displayAttempts, setDisplayAttempts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [toast, setToast] = useState("");
+  const [confirmDeleteEventId, setConfirmDeleteEventId] = useState<number | null>(null);
+  const [confirmDeleteResultId, setConfirmDeleteResultId] = useState<number | null>(null);
+  const [confirmResetEvent, setConfirmResetEvent] = useState(false);
 
   // Modals
   const [showAddEventModal, setShowAddEventModal] = useState(false);
@@ -22,7 +28,7 @@ export default function FieldEvents() {
   const [showAddParticipantModal, setShowAddParticipantModal] = useState(false);
   const [newParticipant, setNewParticipant] = useState({
     athlete_name: "",
-    island: "KAVARATTI",
+    island: "",
     lane_or_order: 1
   });
 
@@ -33,17 +39,74 @@ export default function FieldEvents() {
     island: "KAVARATTI",
     position: 1,
     mark: "",
+    a1: "",
+    a2: "",
+    a3: "",
     is_pb: false,
     lane_or_order: 1,
     new_record: ""
   });
 
   const islandsList = [
-    "KAVARATTI", "AGATTI", "AMINI", "ANDROTH", "KALPENI",
-    "KADMAT", "KILTAN", "CHETLAT", "BITRA", "MINICOY"
+    "AGATTI", "AMINI", "ANDROTH", "BITRA", "CHETLAT",
+    "KADMAT", "KALPENI", "KAVARATTI", "KILTAN", "MINICOY"
   ];
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+
+  const getNumericValue = (val: string) => {
+    if (!val || val === "-" || val === "X") return 0;
+    const parsed = parseFloat(val.replace(/[^0-9.]/g, ''));
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  const calculateBestOfTrials = (a1: string, a2: string, a3: string) => {
+    const v1 = getNumericValue(a1);
+    const v2 = getNumericValue(a2);
+    const v3 = getNumericValue(a3);
+
+    let maxVal = 0;
+    let bestStr = "-";
+
+    if (v1 > maxVal) { maxVal = v1; bestStr = a1; }
+    if (v2 > maxVal) { maxVal = v2; bestStr = a2; }
+    if (v3 > maxVal) { maxVal = v3; bestStr = a3; }
+
+    if (bestStr === "-") {
+      if (a1 === "X" || a2 === "X" || a3 === "X") {
+        bestStr = "X";
+      }
+    }
+    return bestStr;
+  };
+
+  const getBestOfFirstTwo = (a1: string, a2: string) => {
+    const v1 = getNumericValue(a1);
+    const v2 = getNumericValue(a2);
+    let bestVal = 0;
+    let bestStr = "-";
+    if (v1 > bestVal) { bestVal = v1; bestStr = a1; }
+    if (v2 > bestVal) { bestVal = v2; bestStr = a2; }
+    if (bestStr === "-" && (a1 === "X" || a2 === "X")) {
+      bestStr = "X";
+    }
+    return { bestVal, bestStr };
+  };
+
+  const getPositionRank = (resultId: number) => {
+    const withMarks = displayAttempts.filter(r => r.best !== "-");
+    const sortedDesc = [...withMarks].sort((a, b) => getNumericValue(b.best) - getNumericValue(a.best));
+    const idx = sortedDesc.findIndex(r => r.id === resultId);
+    return idx === -1 ? displayAttempts.length : idx + 1;
+  };
+
+  useEffect(() => {
+    if (selectedEventId) {
+      sessionStorage.setItem('selectedEventId', selectedEventId.toString());
+    } else {
+      sessionStorage.removeItem('selectedEventId');
+    }
+  }, [selectedEventId]);
 
   useEffect(() => {
     if (toast) {
@@ -91,11 +154,31 @@ export default function FieldEvents() {
     fetch(`${API_URL}/events/${selectedEventId}/results`)
       .then(res => res.json())
       .then(data => {
-        const formatted = data.map((d: any) => ({
-          id: d.id, pos: d.position, name: d.athlete_name, island: d.island,
-          best: d.mark, pb: d.is_pb, a1: d.mark, a2: "X", a3: "-", a4: "-", a5: "-", a6: "-", order: d.lane_or_order,
-          newRecord: d.new_record
-        }));
+        const formatted = data.map((d: any) => {
+          let a1 = "-";
+          let a2 = "-";
+          let a3 = "-";
+          let best = "-";
+          if (d.mark) {
+            const parts = d.mark.split(',');
+            if (parts.length >= 2) {
+              a1 = parts[0] || "-";
+              a2 = parts[1] || "-";
+              a3 = parts[2] || "-";
+              best = calculateBestOfTrials(a1, a2, a3);
+            } else {
+              a1 = d.mark;
+              a2 = "-";
+              a3 = "-";
+              best = d.mark;
+            }
+          }
+          return {
+            id: d.id, pos: d.position, name: d.athlete_name, island: d.island,
+            best: best, pb: d.is_pb, a1: a1, a2: a2, a3: a3, order: d.lane_or_order,
+            newRecord: d.new_record
+          };
+        });
         setDisplayAttempts(formatted);
         setLoading(false);
       })
@@ -130,20 +213,29 @@ export default function FieldEvents() {
         return;
       }
 
+      const createdEvent = await response.json();
+
       setNewEventName("");
       setShowAddEventModal(false);
-      setToast("FIELD EVENT CREATED");
-      fetchEvents();
+      
+      if (createdEvent.event_type !== 'FIELD') {
+        sessionStorage.setItem('selectedEventId', createdEvent.id.toString());
+        setToast("EVENT DETECTED & SAVED AS TRACK EVENT. REDIRECTING...");
+        setTimeout(() => {
+          navigate('/dashboard/track-events');
+        }, 1500);
+      } else {
+        setSelectedEventId(createdEvent.id);
+        setToast("EVENT CREATED SUCCESSFULLY");
+        fetchEvents();
+      }
     } catch (err) {
       console.error(err);
       setToast("ERROR CREATING EVENT");
     }
   };
 
-  const handleDeleteEvent = async (eventId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!window.confirm("Are you sure you want to delete this event and all its results?")) return;
-
+  const handleDeleteEvent = async (eventId: number) => {
     try {
       const response = await fetch(`${API_URL}/events/${eventId}`, {
         method: 'DELETE'
@@ -179,7 +271,7 @@ export default function FieldEvents() {
           athlete_name: newParticipant.athlete_name.trim().toUpperCase(),
           island: newParticipant.island,
           position: 0,
-          mark: "-",
+          mark: "-,-,-",
           is_pb: false,
           lane_or_order: newParticipant.lane_or_order
         })
@@ -225,9 +317,10 @@ export default function FieldEvents() {
 
       setShowAddParticipantModal(false);
       setNewParticipant({
-        athlete_name: "", island: "KAVARATTI", lane_or_order: displayAttempts.length + 2
+        athlete_name: "", island: "", lane_or_order: displayAttempts.length + 2
       });
       setToast("ATHLETE REGISTERED & ADDED TO EVENT");
+      fetchEvents();
       fetchResults();
     } catch (err) {
       console.error(err);
@@ -239,6 +332,7 @@ export default function FieldEvents() {
     if (!selectedEventId || !editingResultId) return;
 
     try {
+      const markString = `${editingResult.a1 || "-"}-${editingResult.a2 || "-"}-${editingResult.a3 || "-"}`.replace(/-/g, ',');
       const response = await fetch(`${API_URL}/events/${selectedEventId}/results/${editingResultId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -247,7 +341,7 @@ export default function FieldEvents() {
           athlete_name: editingResult.athlete_name,
           island: editingResult.island,
           position: editingResult.position,
-          mark: editingResult.mark.trim(),
+          mark: markString,
           is_pb: editingResult.is_pb,
           lane_or_order: editingResult.lane_or_order,
           new_record: editingResult.new_record.trim() || null
@@ -269,7 +363,7 @@ export default function FieldEvents() {
   };
 
   const handleDeleteResult = async (resultId: number) => {
-    if (!selectedEventId || !window.confirm("Remove this athlete from the event participant list?")) return;
+    if (!selectedEventId) return;
 
     try {
       const response = await fetch(`${API_URL}/events/${selectedEventId}/results/${resultId}`, {
@@ -289,7 +383,7 @@ export default function FieldEvents() {
   };
 
   const handleClearResults = async () => {
-    if (!selectedEventId || !window.confirm("Clear all registered athletes and results for this event?")) return;
+    if (!selectedEventId) return;
 
     try {
       const response = await fetch(`${API_URL}/events/${selectedEventId}/results`, {
@@ -327,19 +421,58 @@ export default function FieldEvents() {
 
   // Sort: Put finished results at the top sorted by position, and unfinished at the bottom by order
   const sortedAttempts = [...displayAttempts].sort((a, b) => {
-    const aFinished = a.best !== "-";
-    const bFinished = b.best !== "-";
-    if (aFinished && !bFinished) return -1;
-    if (!aFinished && bFinished) return 1;
-    if (aFinished && bFinished) {
-      if (a.pos === 0) return 1;
-      if (b.pos === 0) return -1;
-      return a.pos - b.pos;
+    if (selectedEvent && selectedEvent.status === 'OFFICIAL') {
+      if (a.pos !== b.pos) {
+        if (a.pos === 0) return 1;
+        if (b.pos === 0) return -1;
+        return a.pos - b.pos;
+      }
+      return getNumericValue(b.best) - getNumericValue(a.best);
     }
+
+    // Check if ALL athletes have completed Trial 1 and Trial 2
+    const allCompletedFirstTwo = displayAttempts.length > 0 && displayAttempts.every(r => r.a1 !== "-" && r.a2 !== "-");
+
+    if (allCompletedFirstTwo) {
+      // Sort in ASCENDING order of the best of the first 2 trials (worst throws first, best throws last)
+      const aBest2 = getBestOfFirstTwo(a.a1, a.a2).bestVal;
+      const bBest2 = getBestOfFirstTwo(b.a1, b.a2).bestVal;
+      if (aBest2 !== bBest2) {
+        return aBest2 - bBest2;
+      }
+    }
+
     return a.order - b.order;
   });
 
   const currentLeader = sortedAttempts.find(r => r.pos === 1 && r.best !== "-");
+
+  const getStatusBadge = (status: string, isSelected: boolean) => {
+    switch (status) {
+      case 'LIVE':
+        return (
+          <span className="flex items-center gap-1.5 text-[9px] font-black text-track-coral animate-pulse">
+            <span className="w-1.5 h-1.5 rounded-full bg-track-coral animate-pulse"></span>
+            LIVE
+          </span>
+        );
+      case 'OFFICIAL':
+        return (
+          <span className={`flex items-center gap-1.5 text-[9px] font-black ${isSelected ? 'text-emerald-400' : 'text-emerald-600'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-400' : 'bg-emerald-600'}`}></span>
+            OFFICIAL
+          </span>
+        );
+      case 'PENDING':
+      default:
+        return (
+          <span className={`flex items-center gap-1.5 text-[9px] font-black ${isSelected ? 'text-amber-300' : 'text-amber-600'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-300' : 'bg-amber-600'}`}></span>
+            PENDING
+          </span>
+        );
+    }
+  };
 
   // If no competition has been entered
   if (!enteredCompetitionId) {
@@ -429,15 +562,42 @@ export default function FieldEvents() {
                     }`}
                   >
                     <div className="flex flex-col gap-0.5">
-                      <span className="font-editorial-bebas text-lg leading-none tracking-wide">{evt.name}</span>
-                      <span className={`text-[9px] font-black ${selectedEventId === evt.id ? 'text-track-coral' : 'text-track-dark/50'}`}>{evt.status}</span>
+                      <span className="font-bebas text-lg leading-none tracking-wide">{evt.name}</span>
+                      {getStatusBadge(evt.status, selectedEventId === evt.id)}
                     </div>
-                    <button 
-                      onClick={(e) => handleDeleteEvent(evt.id, e)} 
-                      className="p-1.5 bg-white text-track-dark border-2 border-track-dark hover:bg-track-coral hover:text-white transition-colors ml-2 shrink-0 z-10"
-                    >
-                      <Trash className="w-3.5 h-3.5" />
-                    </button>
+                    {confirmDeleteEventId === evt.id ? (
+                      <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteEvent(evt.id);
+                            setConfirmDeleteEventId(null);
+                          }}
+                          className="px-1.5 py-0.5 bg-track-coral text-white border-2 border-track-dark font-black text-[9px] uppercase shadow-[1px_1px_0px_#010F1A] cursor-pointer"
+                        >
+                          YES
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDeleteEventId(null);
+                          }}
+                          className="px-1.5 py-0.5 bg-white text-track-dark border-2 border-track-dark font-black text-[9px] uppercase shadow-[1px_1px_0px_#010F1A] cursor-pointer"
+                        >
+                          NO
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDeleteEventId(evt.id);
+                        }} 
+                        className="p-1.5 bg-white text-track-dark border-2 border-track-dark hover:bg-track-coral hover:text-white transition-colors ml-2 shrink-0 z-10 cursor-pointer"
+                      >
+                        <Trash className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -462,23 +622,55 @@ export default function FieldEvents() {
                     <span className="font-black text-lg">{selectedEvent.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`w-3 h-3 rounded-full ${selectedEvent.status === 'PENDING' ? 'bg-track-coral animate-pulse' : 'bg-[#21A366]'}`}></span>
-                    <span className={`font-black uppercase tracking-widest text-sm ${selectedEvent.status === 'PENDING' ? 'text-track-coral' : 'text-[#21A366]'}`}>
-                      {selectedEvent.status === 'PENDING' ? 'LIVE' : 'OFFICIAL'}
-                    </span>
+                    {selectedEvent.status === 'LIVE' ? (
+                      <>
+                        <span className="w-3 h-3 rounded-full bg-track-coral animate-pulse"></span>
+                        <span className="font-black uppercase tracking-widest text-sm text-track-coral">LIVE</span>
+                      </>
+                    ) : selectedEvent.status === 'OFFICIAL' ? (
+                      <>
+                        <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
+                        <span className="font-black uppercase tracking-widest text-sm text-emerald-600">OFFICIAL</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-3 h-3 rounded-full bg-amber-500"></span>
+                        <span className="font-black uppercase tracking-widest text-sm text-amber-500">PENDING</span>
+                      </>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex gap-2 w-full sm:w-auto">
-                  {selectedEvent.status === 'PENDING' && (
+                  {selectedEvent.status !== 'OFFICIAL' && (
                     <>
-                      <button 
-                        onClick={handleClearResults} 
-                        disabled={displayAttempts.length === 0}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white text-track-dark px-4 py-2 border-4 border-track-dark hover:bg-track-coral hover:text-white transition-all font-black uppercase text-xs disabled:opacity-40"
-                      >
-                        RESET EVENT
-                      </button>
+                      {confirmResetEvent ? (
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => {
+                              handleClearResults();
+                              setConfirmResetEvent(false);
+                            }}
+                            className="bg-track-coral text-white px-4 py-2 border-4 border-track-dark font-black uppercase text-xs cursor-pointer"
+                          >
+                            CONFIRM RESET
+                          </button>
+                          <button 
+                            onClick={() => setConfirmResetEvent(false)}
+                            className="bg-white text-track-dark px-4 py-2 border-4 border-track-dark font-black uppercase text-xs cursor-pointer"
+                          >
+                            CANCEL
+                          </button>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => setConfirmResetEvent(true)} 
+                          disabled={displayAttempts.length === 0}
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white text-track-dark px-4 py-2 border-4 border-track-dark hover:bg-track-coral hover:text-white transition-all font-black uppercase text-xs disabled:opacity-40 cursor-pointer"
+                        >
+                          RESET EVENT
+                        </button>
+                      )}
                       <button 
                         onClick={handleApprove} 
                         disabled={displayAttempts.length === 0 || displayAttempts.some(r => r.best === "-")}
@@ -510,12 +702,12 @@ export default function FieldEvents() {
                   <div className="flex justify-between items-center mb-6 border-b-4 border-track-dark pb-4 relative z-10">
                      <h3 className="text-3xl editorial-heading-bebas text-track-dark">LATEST ATTEMPT</h3>
                      <span className="bg-track-coral text-white font-black px-3 py-1 text-sm uppercase transform -skew-x-12 shadow-[2px_2px_0px_#010F1A]">
-                       {selectedEvent.status === 'PENDING' ? 'UNDER REVIEW' : 'OFFICIAL'}
+                       {selectedEvent.status === 'OFFICIAL' ? 'OFFICIAL' : selectedEvent.status === 'LIVE' ? 'LIVE' : 'PENDING'}
                      </span>
                   </div>
                   <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
                      <div className="w-24 h-24 bg-track-foam border-4 border-track-dark rounded-full overflow-hidden shrink-0 flex items-center justify-center">
-                       <div className="w-full h-full bg-track-dark text-white flex items-center justify-center font-editorial-bebas text-5xl">
+                       <div className="w-full h-full bg-track-dark text-white flex items-center justify-center font-bebas text-5xl">
                          {sortedAttempts[0]?.name?.charAt(0) || "?"}
                        </div>
                      </div>
@@ -543,7 +735,7 @@ export default function FieldEvents() {
                         <th className="p-4 border-r-4 border-track-dark/20">TRIAL 2</th>
                         <th className="p-4 border-r-4 border-track-dark/20">TRIAL 3</th>
                         <th className="p-4 text-right bg-track-lagoon text-track-dark">BEST</th>
-                        {selectedEvent.status === 'PENDING' && (
+                        {selectedEvent.status !== 'OFFICIAL' && (
                           <th className="p-4 text-center w-36 bg-track-foam text-track-dark border-l-4 border-track-dark">ACTIONS</th>
                         )}
                       </tr>
@@ -551,11 +743,11 @@ export default function FieldEvents() {
                     <tbody>
                       {loading ? (
                         <tr>
-                          <td colSpan={selectedEvent.status === 'PENDING' ? 8 : 7} className="p-8 text-center font-bold text-track-dark/40 uppercase">Loading Results...</td>
+                          <td colSpan={selectedEvent.status !== 'OFFICIAL' ? 8 : 7} className="p-8 text-center font-bold text-track-dark/40 uppercase">Loading Results...</td>
                         </tr>
                       ) : sortedAttempts.length === 0 ? (
                         <tr>
-                          <td colSpan={selectedEvent.status === 'PENDING' ? 8 : 7} className="p-8 text-center font-bold text-track-dark/40 uppercase">No Athletes Registered. Click "ADD ATHLETE" to build the start list.</td>
+                          <td colSpan={selectedEvent.status !== 'OFFICIAL' ? 8 : 7} className="p-8 text-center font-bold text-track-dark/40 uppercase">No Athletes Registered. Click "ADD ATHLETE" to build the start list.</td>
                         </tr>
                       ) : sortedAttempts.map((result, i) => (
                         <tr key={i} className={`border-b-4 border-track-dark/10 hover:bg-track-foam transition-colors ${result.best === "-" ? 'bg-white/60' : result.pos === 1 ? 'bg-white' : 'bg-track-foam/50'}`}>
@@ -587,7 +779,7 @@ export default function FieldEvents() {
                               )}
                             </div>
                           </td>
-                          {selectedEvent.status === 'PENDING' && (
+                          {selectedEvent.status !== 'OFFICIAL' && (
                             <td className="p-4 text-center border-l-4 border-track-dark">
                               <div className="flex justify-center gap-2">
                                 <button 
@@ -596,8 +788,11 @@ export default function FieldEvents() {
                                     setEditingResult({
                                       athlete_name: result.name,
                                       island: result.island,
-                                      position: result.pos === 0 ? sortedAttempts.filter(r => r.best !== "-").length + 1 : result.pos,
+                                      position: result.pos === 0 ? getPositionRank(result.id) : result.pos,
                                       mark: result.best === "-" ? "" : result.best,
+                                      a1: result.a1 === "-" ? "" : result.a1,
+                                      a2: result.a2 === "-" ? "" : result.a2,
+                                      a3: result.a3 === "-" ? "" : result.a3,
                                       is_pb: result.pb,
                                       lane_or_order: result.order,
                                       new_record: result.newRecord || ""
@@ -608,13 +803,33 @@ export default function FieldEvents() {
                                 >
                                   <Edit3 className="w-3 h-3" /> ENTER MARK
                                 </button>
-                                <button 
-                                  onClick={() => handleDeleteResult(result.id)}
-                                  className="p-1 bg-white border-2 border-track-dark text-track-dark hover:bg-track-coral hover:text-white transition-colors"
-                                  title="Remove Participant"
-                                >
-                                  <Trash className="w-3.5 h-3.5" />
-                                </button>
+                                {confirmDeleteResultId === result.id ? (
+                                  <div className="flex gap-1 items-center">
+                                    <button 
+                                      onClick={() => {
+                                        handleDeleteResult(result.id);
+                                        setConfirmDeleteResultId(null);
+                                      }}
+                                      className="px-2 py-0.5 bg-track-coral text-white border-2 border-track-dark font-black text-[9px] uppercase cursor-pointer"
+                                    >
+                                      CONFIRM
+                                    </button>
+                                    <button 
+                                      onClick={() => setConfirmDeleteResultId(null)}
+                                      className="px-2 py-0.5 bg-white text-track-dark border-2 border-track-dark font-black text-[9px] uppercase cursor-pointer"
+                                    >
+                                      CANCEL
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button 
+                                    onClick={() => setConfirmDeleteResultId(result.id)}
+                                    className="p-1 bg-white border-2 border-track-dark text-track-dark hover:bg-track-coral hover:text-white transition-colors cursor-pointer"
+                                    title="Remove Participant"
+                                  >
+                                    <Trash className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </div>
                             </td>
                           )}
@@ -640,7 +855,7 @@ export default function FieldEvents() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-track-dark/85 backdrop-blur-xs">
           <div className="bg-white border-8 border-track-dark shadow-[12px_12px_0px_#FF7A45] w-full max-w-lg">
             <div className="p-4 border-b-8 border-track-dark bg-track-foam flex justify-between items-center">
-              <h2 className="text-3xl editorial-heading-bebas text-track-dark">ADD FIELD EVENT</h2>
+              <h2 className="text-3xl editorial-heading-bebas text-track-dark">ADD EVENT</h2>
               <button onClick={() => setShowAddEventModal(false)} className="font-black text-track-dark text-xl hover:text-track-coral cursor-pointer">X</button>
             </div>
             <form onSubmit={handleCreateEvent} className="p-6 space-y-6">
@@ -651,7 +866,7 @@ export default function FieldEvents() {
                   value={newEventName} 
                   onChange={e => setNewEventName(e.target.value)} 
                   className="w-full bg-track-foam border-4 border-track-dark p-3 font-bold uppercase" 
-                  placeholder="e.g. WOMEN'S JAVELIN THROW - FINAL" 
+                  placeholder="ENTER EVENT NAME (E.G. JAVELIN THROW)" 
                 />
               </div>
               <div className="flex justify-end pt-4 border-t-4 border-track-dark">
@@ -680,17 +895,19 @@ export default function FieldEvents() {
                   value={newParticipant.athlete_name} 
                   onChange={e => setNewParticipant({...newParticipant, athlete_name: e.target.value})} 
                   className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase" 
-                  placeholder="e.g. HIBA RAFI" 
+                  placeholder="ENTER ATHLETE FULL NAME" 
                 />
               </div>
               
               <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-track-dark mb-1">Island Team</label>
                 <select 
+                  required
                   value={newParticipant.island} 
                   onChange={e => setNewParticipant({...newParticipant, island: e.target.value})} 
-                  className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase appearance-none"
+                  className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase appearance-none cursor-pointer"
                 >
+                  <option value="" disabled>SELECT</option>
                   {islandsList.map(isl => (
                     <option key={isl} value={isl}>{isl}</option>
                   ))}
@@ -739,16 +956,60 @@ export default function FieldEvents() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-widest text-track-dark mb-1">Distance Result</label>
-                  <input 
-                    required 
-                    autoFocus
-                    value={editingResult.mark} 
-                    onChange={e => setEditingResult({...editingResult, mark: e.target.value})} 
-                    className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold" 
-                    placeholder="e.g. 15.24m" 
-                  />
+                <div className="col-span-2 grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-widest text-track-dark mb-1">Trial 1</label>
+                    <input 
+                      required 
+                      autoFocus
+                      value={editingResult.a1} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        const hasVal = !!val && val !== "-";
+                        const a2 = hasVal ? editingResult.a2 : "-";
+                        const a3 = hasVal && a2 !== "-" ? editingResult.a3 : "-";
+                        const best = calculateBestOfTrials(val, a2, a3);
+                        setEditingResult({...editingResult, a1: val, a2, a3, mark: best});
+                      }} 
+                      className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase" 
+                      placeholder="MARK (E.G. 15.20)" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-widest text-track-dark mb-1">Trial 2</label>
+                    <input 
+                      disabled={!editingResult.a1 || editingResult.a1 === "-"}
+                      value={editingResult.a2} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        const hasVal = !!val && val !== "-";
+                        const a3 = hasVal ? editingResult.a3 : "-";
+                        const best = calculateBestOfTrials(editingResult.a1, val, a3);
+                        setEditingResult({...editingResult, a2: val, a3, mark: best});
+                      }} 
+                      className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase disabled:opacity-50 disabled:cursor-not-allowed" 
+                      placeholder="FOUL (E.G. X)" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-widest text-track-dark mb-1">Trial 3</label>
+                    <input 
+                      disabled={!editingResult.a2 || editingResult.a2 === "-"}
+                      value={editingResult.a3} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        const best = calculateBestOfTrials(editingResult.a1, editingResult.a2, val);
+                        setEditingResult({...editingResult, a3: val, mark: best});
+                      }} 
+                      className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase disabled:opacity-50 disabled:cursor-not-allowed" 
+                      placeholder="PASS (E.G. -)" 
+                    />
+                  </div>
+                </div>
+
+                <div className="col-span-2 flex justify-between items-center bg-track-foam p-3 border-4 border-track-dark">
+                  <span className="text-xs font-black uppercase tracking-widest text-track-dark">Analyzed Best Mark:</span>
+                  <span className="text-2xl font-black text-track-coral">{editingResult.mark || "-"}</span>
                 </div>
 
                 <div>

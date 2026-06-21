@@ -128,7 +128,7 @@ class ResultBase(BaseModel):
     position: int
     mark: str
     reaction: Optional[str] = None
-    is_pb: bool = False
+    is_pb: Optional[bool] = False
     new_record: Optional[str] = None
     lane_or_order: Optional[int] = None
 

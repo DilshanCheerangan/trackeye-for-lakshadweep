@@ -17,16 +17,16 @@ def seed_db():
 
     # Seed Islands
     islands_data = [
-        {"name": "KAVARATTI", "manager": "MOHAMMED K", "coach": "ALI HASSAN", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-track-coral"},
-        {"name": "AGATTI", "manager": "ABDUL RAHIM", "coach": "MUNEER", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-track-lagoon"},
-        {"name": "ANDROTH", "manager": "HAMEED", "coach": "SHABEER", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-track-dark"},
-        {"name": "MINICOY", "manager": "ISMAIL", "coach": "FAISAL", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-track-foam"},
-        {"name": "AMINI", "manager": "SHAREEF", "coach": "KHALID", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-white"},
-        {"name": "KADMAT", "manager": "RASHEED", "coach": "SAYED", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-white"},
-        {"name": "KALPENI", "manager": "USMAN", "coach": "KOYA", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-white"},
-        {"name": "KILTAN", "manager": "POCKER", "coach": "ATTA", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-white"},
-        {"name": "CHETLAT", "manager": "KIDAVE", "coach": "MUTHU", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-white"},
-        {"name": "BITRA", "manager": "BAPPU", "coach": "CHERIYA", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-white"},
+        {"name": "KAVARATTI", "manager": "-", "coach": "-", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-track-coral"},
+        {"name": "AGATTI", "manager": "-", "coach": "-", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-track-lagoon"},
+        {"name": "ANDROTH", "manager": "-", "coach": "-", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-track-dark"},
+        {"name": "MINICOY", "manager": "-", "coach": "-", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-track-foam"},
+        {"name": "AMINI", "manager": "-", "coach": "-", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-white"},
+        {"name": "KADMAT", "manager": "-", "coach": "-", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-white"},
+        {"name": "KALPENI", "manager": "-", "coach": "-", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-white"},
+        {"name": "KILTAN", "manager": "-", "coach": "-", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-white"},
+        {"name": "CHETLAT", "manager": "-", "coach": "-", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-white"},
+        {"name": "BITRA", "manager": "-", "coach": "-", "gold": 0, "silver": 0, "bronze": 0, "color": "bg-white"},
     ]
     for idata in islands_data:
         db.add(models.Island(**idata))
