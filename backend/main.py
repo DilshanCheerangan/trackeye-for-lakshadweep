@@ -10,6 +10,19 @@ from .routes import athletes, competitions, ws, video, stats, islands, entries, 
 models.Base.metadata.create_all(bind=engine)
 os.makedirs("backend/uploads", exist_ok=True)
 
+# Auto-seed database if fresh (0 islands)
+from .database import SessionLocal
+db = SessionLocal()
+try:
+    if db.query(models.Island).count() == 0:
+        from .seed import seed_db
+        seed_db()
+except Exception as e:
+    print(f"Error checking/seeding database: {e}")
+finally:
+    db.close()
+
+
 app = FastAPI(title="TrackEye Backend API")
 app.mount("/uploads", StaticFiles(directory="backend/uploads"), name="uploads")
 

@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: trackeye-backend
+    env: docker
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    plan: free
+    startCommand: null
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Set this in Render Dashboard to a persistent PostgreSQL connection if needed (e.g. Neon or Supabase)
