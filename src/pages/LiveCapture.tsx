@@ -320,6 +320,14 @@ export default function LiveCapture() {
                 </div>
               )}
 
+              {/* Front Camera Warning Overlay */}
+              {feedMode === "LOCAL_RECORDER" && facingMode === "user" && (
+                <div className="absolute top-4 right-4 bg-yellow-500 border-2 border-track-dark text-track-dark font-black text-[10px] md:text-xs px-3 py-1.5 flex items-center gap-1.5 uppercase rounded shadow-[2px_2px_0px_#010F1A] animate-pulse">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>FRONT CAMERA ACTIVE: USE BACK CAMERA FOR SPRINTS</span>
+                </div>
+              )}
+
               {/* Camera HUD */}
               <div className="absolute inset-x-0 bottom-0 p-4 flex justify-between items-end bg-gradient-to-t from-track-dark/90 to-transparent gap-2">
                 <div className="flex flex-wrap gap-2 max-w-[70%]">
@@ -461,9 +469,14 @@ export default function LiveCapture() {
                     onChange={(e) => setFacingMode(e.target.value as "user" | "environment")} 
                     className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase cursor-pointer"
                   >
-                    <option value="environment">Back Camera (Rear-facing)</option>
-                    <option value="user">Front Camera (Selfie-facing)</option>
+                    <option value="environment">Back Camera (Recommended for Sprints)</option>
+                    <option value="user">Front Camera (Selfie Mode)</option>
                   </select>
+                  {facingMode === "user" && (
+                    <p className="text-[10px] text-track-coral font-black uppercase mt-1.5 animate-pulse">
+                      ⚠️ Note: Sprints should be recorded with the back camera.
+                    </p>
+                  )}
                 </div>
               )}
               <div>
@@ -510,6 +523,7 @@ export default function LiveCapture() {
               <ol className="list-decimal list-inside space-y-2 uppercase leading-relaxed">
                 <li>Ensure <span className="bg-track-lagoon text-track-dark px-1">Webcam Recorder</span> mode is selected in the top right.</li>
                 <li>Accept camera and microphone permissions when requested by the browser.</li>
+                <li>Verify <span className="bg-track-coral text-white px-1">Back Camera</span> is selected (critical for sprint timing accuracy).</li>
                 <li>Align the camera lens perpendicular to the finish line on the track.</li>
                 <li>Click <span className="text-track-coral font-black">START RECORDING</span> when the starting gun fires.</li>
                 <li>Click <span className="text-red-600 font-black">STOP RECORDING</span> once all athletes have crossed the line.</li>
