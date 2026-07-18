@@ -1,4 +1,4 @@
-import { Camera, Maximize, AlertTriangle, Play, Smartphone, Zap, Save, Video, Square, Upload, Loader2, ArrowRight, AlertCircle } from 'lucide-react';
+import { Camera, Maximize, AlertTriangle, Play, Smartphone, Zap, Save, Video, Square, Upload, Loader2, ArrowRight, AlertCircle, RotateCw } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,6 +25,7 @@ export default function LiveCapture() {
   // Events list for saving recorded clip
   const [events, setEvents] = useState<any[]>([]);
   const [targetEventId, setTargetEventId] = useState<number | null>(null);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -71,17 +72,25 @@ export default function LiveCapture() {
   // Set up local webcam stream if LOCAL_RECORDER is selected
   useEffect(() => {
     if (feedMode === "LOCAL_RECORDER") {
-      startWebcam();
+      startWebcam(facingMode);
     } else {
       stopWebcam();
     }
     return () => stopWebcam();
-  }, [feedMode]);
+  }, [feedMode, facingMode]);
 
-  const startWebcam = async () => {
+  const startWebcam = async (mode: "user" | "environment" = facingMode) => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1280, height: 720, frameRate: { ideal: 60 } },
+        video: { 
+          width: { ideal: 1280 }, 
+          height: { ideal: 720 }, 
+          frameRate: { ideal: 60 },
+          facingMode: { ideal: mode } 
+        },
         audio: true
       });
       streamRef.current = stream;
@@ -273,7 +282,7 @@ export default function LiveCapture() {
                   autoPlay 
                   muted 
                   playsInline 
-                  className="w-full h-full object-cover scale-x-[-1]" // mirror webcam output for natural view
+                  className={`w-full h-full object-cover ${facingMode === "user" ? "scale-x-[-1]" : ""}`} // mirror webcam output for front camera only
                 />
               )}
 
@@ -312,21 +321,33 @@ export default function LiveCapture() {
               )}
 
               {/* Camera HUD */}
-              <div className="absolute inset-x-0 bottom-0 p-4 flex justify-between items-end bg-gradient-to-t from-track-dark/90 to-transparent">
-                <div className="flex gap-4">
-                  <div className="bg-white px-3 py-1 font-black text-track-dark text-xs uppercase border-l-4 border-track-lagoon">
+              <div className="absolute inset-x-0 bottom-0 p-4 flex justify-between items-end bg-gradient-to-t from-track-dark/90 to-transparent gap-2">
+                <div className="flex flex-wrap gap-2 max-w-[70%]">
+                  <div className="bg-white px-2 py-0.5 md:px-3 md:py-1 font-black text-track-dark text-[10px] md:text-xs uppercase border-l-4 border-track-lagoon">
                     {feedMode === "LOCAL_RECORDER" ? "BROWSER WEBCAM" : "AI DETECTOR"}
                   </div>
-                  <div className="bg-white px-3 py-1 font-black text-track-dark text-xs uppercase border-l-4 border-track-foam">
+                  <div className="bg-white px-2 py-0.5 md:px-3 md:py-1 font-black text-track-dark text-[10px] md:text-xs uppercase border-l-4 border-track-foam">
                     {fps}
                   </div>
-                  <div className="bg-white px-3 py-1 font-black text-track-dark text-xs uppercase border-l-4 border-track-coral">
+                  <div className="bg-white px-2 py-0.5 md:px-3 md:py-1 font-black text-track-dark text-[10px] md:text-xs uppercase border-l-4 border-track-coral">
                     CV HUD ACTIVE
                   </div>
                 </div>
-                <button onClick={() => { try { document.documentElement.requestFullscreen(); } catch(e) {} }} className="p-2 bg-white/10 hover:bg-white text-white hover:text-track-dark transition-colors border-2 border-white/20">
-                  <Maximize className="w-5 h-5" />
-                </button>
+                <div className="flex gap-2 shrink-0">
+                  {feedMode === "LOCAL_RECORDER" && (
+                    <button 
+                      onClick={() => setFacingMode(prev => prev === "user" ? "environment" : "user")} 
+                      title="Switch Camera"
+                      className="p-2 bg-white/10 hover:bg-white text-white hover:text-track-dark transition-colors border-2 border-white/20 flex items-center justify-center gap-1 font-black text-[10px] md:text-xs uppercase"
+                    >
+                      <RotateCw className="w-4 h-4 md:w-5 md:h-5" />
+                      <span className="hidden sm:inline">{facingMode === "user" ? "BACK CAM" : "FRONT CAM"}</span>
+                    </button>
+                  )}
+                  <button onClick={() => { try { document.documentElement.requestFullscreen(); } catch(e) {} }} className="p-2 bg-white/10 hover:bg-white text-white hover:text-track-dark transition-colors border-2 border-white/20">
+                    <Maximize className="w-4 h-4 md:w-5 md:h-5" />
+                  </button>
+                </div>
               </div>
             </div>
             
@@ -432,6 +453,19 @@ export default function LiveCapture() {
               <Smartphone className="w-6 h-6 text-track-dark" />
             </div>
             <div className="p-6 space-y-4 bg-white">
+              {feedMode === "LOCAL_RECORDER" && (
+                <div>
+                  <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Active Camera</label>
+                  <select 
+                    value={facingMode} 
+                    onChange={(e) => setFacingMode(e.target.value as "user" | "environment")} 
+                    className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase cursor-pointer"
+                  >
+                    <option value="environment">Back Camera (Rear-facing)</option>
+                    <option value="user">Front Camera (Selfie-facing)</option>
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-black uppercase tracking-widest text-track-dark mb-2">Capture FPS</label>
                 <select value={fps} onChange={(e) => setFps(e.target.value)} className="w-full bg-track-foam border-4 border-track-dark p-2 font-bold uppercase cursor-pointer">
